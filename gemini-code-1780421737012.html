@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Minimercado</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  
+  <style>
+    /* Estilos personalizados esenciales que Bootstrap no cubre directamente */
+    :root {
+      --bg: #f7f5f0;
+      --ink: #1a1a18;
+      --muted: #6b6b62;
+      --border: #e0ddd5;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      /* background-color: var(--bg); */
+      color: var(--ink);
+      background-image: url(img/fondo.png);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      height: 100vh;
+      margin:0 ;
+
+    }
+
+    h1, .font-serif {
+      font-family: 'Fraunces', serif;
+    }
+
+    /* Ajustes finos para el buscador de la barra de navegación */
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-wrap input {
+      padding-left: 2.75rem;
+      background-color: var(--bg);
+      border-color: var(--border);
+    }
+    .search-wrap input:focus {
+      background-color: #fff;
+      border-color: var(--ink);
+      box-shadow: none;
+    }
+
+    /* Efectos hover en componentes */
+    .cat-circle {
+      width: 80px;
+      height: 80px;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      border: 1.5px solid var(--border) !important;
+    }
+    .cat-item:hover .cat-circle {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border-color: var(--ink) !important;
+    }
+
+    .product-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1.5px solid var(--border) !important;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    }
+
+    /* Botón personalizado estilo "Ink" */
+    .btn-ink {
+      background-color: var(--ink);
+      color: #fff;
+      border: none;
+      transition: background-color 0.2s, transform 0.15s;
+    }
+    .btn-ink:hover {
+      background-color: #333330;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline-ink {
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-outline-ink:hover {
+      background-color: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+
+    /* Badges flotantes sobre la imagen del producto */
+    .discount-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+    }
+
+    /* Banner Hero con patrón de fondo */
+    .hero-banner {
+      border: 1.5px solid var(--border) !important;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 28px,
+        rgba(0,0,0,0.015) 28px,
+        rgba(0,0,0,0.015) 29px
+      );
+      pointer-events: none;
+    }
+
+    /* Iconos Redes Sociales */
+    .social-icon {
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .social-icon:hover {
+      background-color: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="navbar navbar-expand-md navbar-light bg-success sticky-top border-bottom">
+  <div class="container-xl px-3 py-2">
+    <!-- Logo -->
+    <a href="#" class="navbar-brand d-flex align-items-center gap-2 m-0">
+      <div class="bg-dark rounded p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span class="fw-bold font-serif fs-5 text-light letter-spacing-tight">Minimercado</span>
+    </a>
+
+    <!-- Buscador -->
+    <div class="search-wrap flex-grow-1 mx-md-4 my-2 my-md-0 position-relative order-3 order-md-2" style="max-width: 600px;">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" class="form-control rounded-pill text-sm fs-6" placeholder="Buscar productos, marcas..." />
+    </div>
+
+    <!-- Acciones (Cuenta, Carrito) -->
+    <div class="text-white d-flex align-items-center gap-3 order-2 order-md-3 ms-auto ms-md-0">
+      <button class="btn btn-link text-decoration-none text-dark p-0 d-flex flex-column align-items-center fs-6 fw-medium" style="font-size: 0.75rem !important;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        Cuenta
+      </button>
+      <button class="btn btn-link text-decoration-none text-dark p-0 d-flex flex-column align-items-center position-relative fs-6 fw-medium" style="font-size: 0.75rem !important;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
+        </svg>
+        <span class="badge rounded-circle bg-danger position-absolute top-0 start-100 translate-middle font-sans text-white d-flex align-items-center justify-content-center" style="width: 18px; height: 18px; font-size: 0.65rem;">0</span>
+        Carrito
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="container-xl px-3 py-4 py-md-5">
+
+  <!-- HERO BANNER -->
+  <div class="hero-banner bg-white rounded-4 p-4 p-md-5 mb-5 shadow-sm">
+    <div class="row align-items-center g-4">
+      <div class="col-12 col-md-7 col-lg-8 text-center text-md-start">
+        <p class="text-uppercase text-muted fw-semibold small tracking-widest mb-2" style="letter-spacing: 0.1em; font-size: 0.75rem;">Oferta de la semana</p>
+        <h1 class="display-5 fw-black text-dark lh-1 mb-3">DESCUENTOS HASTA<br class="d-none d-md-block"/> EL 40%</h1>
+        <p class="text-muted fs-6 mb-4" style="max-width: 400px;">En productos seleccionados de limpieza y hogar.</p>
+        <a href="#" class="btn btn-ink px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2 rounded-2">
+          Ver Ofertas
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+      </div>
+      <!-- Imagen lado derecho oculta en móviles -->
+      <div class="col-md-5 col-lg-4 d-none d-md-block">
+        <div class="bg-light rounded-3 border p-3 d-flex flex-column gap-2 mx-auto" style="max-width: 260px; height: 160px;">
+          <div class="row g-2 flex-grow-1">
+            <div class="col-6 bg-secondary bg-opacity-10 rounded">
+              <img src="https://placehold.co/400x300/FF01F1" alt="">
+            </div>
+            <div class="col-6 bg-secondary bg-opacity-20 rounded">
+              <img src="https://placehold.co/400x300/FF01F1" alt="">
+            </div>
+          </div>
+          <div class="bg-secondary bg-opacity-25 rounded-2 w-100" style="height: 40px;">
+            <img src="https://placehold.co/400x300/FF01F1" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <h2 class="font-serif fs-4 fw-bold mb-4 text-light text-center text-sm-start">Categorías Principales</h2>
+  <!-- Grid responsiva: de 3 columnas en móviles pequeños a 6 en pantallas grandes -->
+  <div class="row row-cols-3 row-cols-sm-4 row-cols-md-6 g-3 mb-5 text-center">
+   <div class="col">
+  <div class="cat-item d-flex flex-column align-items-center gap-2">
+    <div class="cat-circle bg-dark rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 60px; height: 60px;">
+      <img src="img/frutas.jpg" alt="Lácteos" class="w-100 h-100 rounded-circle object-fit-cover">
+    </div>
+    <span class="small fw-medium text-light text-truncate w-100 text-center">Frutas</span>
+  </div>
+</div>
+
+    <div class="col">
+  <div class="cat-item d-flex flex-column align-items-center gap-2">
+    <div class="cat-circle bg-dark rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 60px; height: 60px;">
+      <img src="img/lacteos.jpg" alt="Lácteos" class="w-100 h-100 rounded-circle object-fit-cover">
+    </div>
+    <span class="small fw-medium text-light text-truncate w-100 text-center">Lácteos</span>
+  </div>
+</div>
+
+    <div class="col">
+  <div class="cat-item d-flex flex-column align-items-center gap-2">
+    <div class="cat-circle bg-dark rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 60px; height: 60px;">
+      <img src="img/limpieza.jpg" alt="Lácteos" class="w-100 h-100 rounded-circle object-fit-cover">
+    </div>
+    <span class="small fw-medium text-light text-truncate w-100 text-center">Limpieza</span>
+  </div>
+</div>
+
+    <div class="col">
+  <div class="cat-item d-flex flex-column align-items-center gap-2">
+    <div class="cat-circle bg-dark rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 60px; height: 60px;">
+      <img src="img/panaderia.jpg" alt="Lácteos" class="w-100 h-100 rounded-circle object-fit-cover">
+    </div>
+    <span class="small fw-medium text-light text-truncate w-100 text-center">Panaderia</span>
+  </div>
+</div>
+
+    <div class="col">
+  <div class="cat-item d-flex flex-column align-items-center gap-2">
+    <div class="cat-circle bg-dark rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 60px; height: 60px;">
+      <img src="img/carnes.jpg" alt="Lácteos" class="w-100 h-100 rounded-circle object-fit-cover">
+    </div>
+    <span class="small fw-medium text-light text-truncate w-100 text-center">Carnes</span>
+  </div>
+</div>
+
+    <div class="col">
+  <div class="cat-item d-flex flex-column align-items-center gap-2">
+    <div class="cat-circle bg-dark rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 60px; height: 60px;">
+      <img src="img/bebidas.jpg" alt="Lácteos" class="w-100 h-100 rounded-circle object-fit-cover">
+    </div>
+    <span class="small fw-medium text-light text-truncate w-100 text-center">Bebidas</span>
+  </div>
+</div>
+  </div>
+
+  <!-- FEATURED OFFERS -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="font-serif fs-4 fw-bold m-0 text-dark">Ofertas Destacadas</h2>
+    <a href="#" class="text-muted small fw-bold text-decoration-none border-bottom border-secondary border-opacity-25 pb-1 hover-dark" style="transition: color 0.2s;">Ver todo</a>
+  </div>
+
+  <!-- PRODUCTS GRID -->
+  <!-- Responsivo solicitado: col-12 (móvil) / col-md-6 (tablet) / col-lg-4 (pantallas medianas) / col-xl-3 (pantallas grandes) -->
+  <div class="row g-4">
+
+    <!-- Product 1 -->
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+      <div class="product-card card h-100 bg-white rounded-3 overflow-hidden">
+        <div class="bg-light position-relative d-flex align-items-center justify-content-center w-100" style="height: 150px;">
+          <div class="bg-secondary bg-opacity-24 rounded-2" style="width: 70%; height: 75%;"></div>
+          <span class="discount-badge badge bg-danger rounded-pill fw-bold py-1 px-2 text-xs" style="font-size:0.72rem;">-20%</span>
+        </div>
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title fs-6 fw-bold text-dark mb-1">Leche Entera 1L</h5>
+            <p class="card-text text-muted small mb-2">Marca Premium</p>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="font-serif fw-bold text-dark fs-5">$1.20</span>
+              <span class="text-muted text-decoration-line-through small">$1.50</span>
+            </div>
+          </div>
+          <button class="btn btn-outline-ink w-100 py-2 rounded-2 text-sm">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product 2 -->
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+      <div class="product-card card h-100 bg-white rounded-3 overflow-hidden">
+        <div class="bg-light position-relative d-flex align-items-center justify-content-center w-100" style="height: 150px;">
+          <div class="bg-secondary bg-opacity-24 rounded-2" style="width: 70%; height: 75%;"></div>
+          <span class="discount-badge badge bg-warning text-dark rounded-pill fw-bold py-1 px-2 text-xs" style="font-size:0.72rem; background-color: #b97a1e !important; color: white !important;">-15%</span>
+        </div>
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title fs-6 fw-bold text-dark mb-1">Detergente Líquido</h5>
+            <p class="card-text text-muted small mb-2">Limpieza Total</p>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="font-serif fw-bold text-dark fs-5">$4.50</span>
+              <span class="text-muted text-decoration-line-through small">$5.30</span>
+            </div>
+          </div>
+          <button class="btn btn-outline-ink w-100 py-2 rounded-2 text-sm">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product 3 -->
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+      <div class="product-card card h-100 bg-white rounded-3 overflow-hidden">
+        <div class="bg-light position-relative d-flex align-items-center justify-content-center w-100" style="height: 150px;">
+          <div class="bg-secondary bg-opacity-24 rounded-2" style="width: 70%; height: 75%;"></div>
+          <span class="discount-badge badge bg-success rounded-pill fw-bold py-1 px-2 text-xs" style="font-size:0.72rem; background-color: #2a6b3a !important;">-30%</span>
+        </div>
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title fs-6 fw-bold text-dark mb-1">Manzana Roja x kg</h5>
+            <p class="card-text text-muted small mb-2">Fresco del Campo</p>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="font-serif fw-bold text-dark fs-5">$2.10</span>
+              <span class="text-muted text-decoration-line-through small">$3.00</span>
+            </div>
+          </div>
+          <button class="btn btn-outline-ink w-100 py-2 rounded-2 text-sm">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product 4 -->
+    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+      <div class="product-card card h-100 bg-white rounded-3 overflow-hidden">
+        <div class="bg-light position-relative d-flex align-items-center justify-content-center w-100" style="height: 150px;">
+          <div class="bg-secondary bg-opacity-24 rounded-2" style="width: 70%; height: 75%;"></div>
+        </div>
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title fs-6 fw-bold text-dark mb-1">Aceite de Oliva</h5>
+            <p class="card-text text-muted small mb-2">Extra Virgen</p>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="font-serif fw-bold text-dark fs-5">$8.90</span>
+            </div>
+          </div>
+          <button class="btn btn-outline-ink w-100 py-2 rounded-2 text-sm">Agregar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-white border-top mt-5 pt-5 pb-4">
+  <div class="container-xl px-3">
+    <!-- Grid adaptable: col-12 en móviles, col-md-6 en tablets y col-lg-3 en pantallas grandes -->
+    <div class="row g-4 mb-5">
+      
+      <div class="col-12 col-md-6 col-lg-3 text-center text-sm-start">
+        <p class="font-serif fs-5 fw-bold text-dark mb-2">Minimercado</p>
+        <p class="text-muted small lh-base" style="max-width: 240px;">Tu tienda de confianza a la vuelta de la esquina. Calidad y frescura garantizada todos los días.</p>
+      </div>
+
+      <div class="col-6 col-sm-4 col-md-6 col-lg-3 text-center text-sm-start">
+        <h4 class="text-uppercase text-muted fw-bold tracking-wider mb-3" style="font-size: 0.75rem; letter-spacing: 0.08em;">Empresa</h4>
+        <ul class="list-unstyled d-flex flex-column gap-2 small">
+          <li><a href="#" class="text-dark text-decoration-none opacity-75 hover-opacity-100">Sobre nosotros</a></li>
+          <li><a href="#" class="text-dark text-decoration-none opacity-75 hover-opacity-100">Trabaja con nosotros</a></li>
+          <li><a href="#" class="text-dark text-decoration-none opacity-75 hover-opacity-100">Sostenibilidad</a></li>
+        </ul>
+      </div>
+
+      <div class="col-6 col-sm-4 col-md-6 col-lg-3 text-center text-sm-start">
+        <h4 class="text-uppercase text-muted fw-bold tracking-wider mb-3" style="font-size: 0.75rem; letter-spacing: 0.08em;">Ayuda</h4>
+        <ul class="list-unstyled d-flex flex-column gap-2 small">
+          <li><a href="#" class="text-dark text-decoration-none opacity-75 hover-opacity-100">Preguntas frecuentes</a></li>
+          <li><a href="#" class="text-dark text-decoration-none opacity-75 hover-opacity-100">Políticas de envío</a></li>
+          <li><a href="#" class="text-dark text-decoration-none opacity-75 hover-opacity-100">Devoluciones</a></li>
+        </ul>
+      </div>
+
+      <div class="col-12 col-sm-4 col-md-6 col-lg-3 text-center text-sm-start">
+        <h4 class="text-uppercase text-muted fw-bold tracking-wider mb-3" style="font-size: 0.75rem; letter-spacing: 0.08em;">Contacto</h4>
+        <p class="text-muted small mb-1">info@minimart.com</p>
+        <p class="text-muted small mb-3">0800-123-4567</p>
+        <div class="d-flex gap-2 justify-content-center justify-content-sm-start">
+          <a href="#" class="social-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="border-top pt-3 text-center text-muted small">
+      © 2026 Minimercado. Todos los derechos reservados.
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
