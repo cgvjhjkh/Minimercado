@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MiMini – Repartidor</title>
+  <script>
+    // ============ GUARDIA DE SESIÓN ============
+    (function() {
+      const PAGINA_POR_ROL = { cliente: 'cliente.html', empleado: 'empleado.html', administrador: 'administrador.html', repartidor: 'repartidor.html' };
+      let usuario = null;
+      try { usuario = JSON.parse(localStorage.getItem('usuario')); } catch (e) { usuario = null; }
+      if (!usuario) {
+        window.location.replace('index.html');
+      } else if (usuario.rol !== 'repartidor') {
+        window.location.replace(PAGINA_POR_ROL[usuario.rol] || 'index.html');
+      } else {
+        window.usuarioActual = usuario;
+      }
+    })();
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--green:#15803d;--green-light:#dcfce7;--green-mid:#22c55e;--green-dark:#14532d;--orange:#ea580c;--radius:16px;}
+    *{box-sizing:border-box;}
+    body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#0f2544 0%,#0d4a2c 100%);min-height:100vh;margin:0;padding:24px 16px;}
+    .page-header{text-align:center;margin-bottom:28px;}
+    .page-header h4{color:#fff;font-weight:800;margin:0 0 4px;font-size:1.3rem;}
+    .page-header p{color:rgba(255,255,255,.6);font-size:.85rem;margin:0;}
+    .phones-grid{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;align-items:flex-start;}
+    .phone-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+    .phone-step-label{color:rgba(255,255,255,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,255,255,.1);border-radius:20px;padding:3px 12px;}
+    .phone-frame{width:340px;max-width:100%;background:#0a0a0a;border-radius:38px;padding:9px;box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.1);}
+    .phone-screen{background:#fff;border-radius:30px;overflow:hidden;min-height:640px;position:relative;display:flex;flex-direction:column;}
+    .status-bar{background:#fff;padding:8px 16px 4px;display:flex;justify-content:space-between;align-items:center;}
+    .status-bar .time{font-size:.75rem;font-weight:800;color:#0a0a0a;}
+    .status-bar .icons{display:flex;gap:4px;align-items:center;}
+    .status-bar .icons i{font-size:.7rem;color:#0a0a0a;}
+    .app-topbar{padding:10px 16px 12px;display:flex;align-items:center;justify-content:space-between;}
+    .app-topbar .menu-btn{background:none;border:none;color:#333;font-size:1.2rem;padding:0;cursor:pointer;}
+    .app-topbar .app-title{font-weight:800;font-size:.95rem;color:#0f172a;}
+    .app-topbar .avatar-sm{width:30px;height:30px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;}
+    .toggle-bar{margin:0 16px 14px;background:#f8fafc;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border:1px solid #e2e8f0;}
+    .toggle-bar .label{font-size:.82rem;font-weight:700;color:#334155;}
+    .toggle-bar .sublabel{font-size:.7rem;color:#94a3b8;}
+    .big-toggle{position:relative;width:52px;height:28px;border-radius:20px;cursor:pointer;transition:background .3s;}
+    .big-toggle::after{content:'';position:absolute;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .3s;}
+    .big-toggle.on{background:var(--green-mid);}
+    .big-toggle.on::after{left:calc(100% - 25px);}
+    .big-toggle.off{background:#cbd5e1;}
+    .big-toggle.off::after{left:3px;}
+    .orders-section{padding:0 16px;flex:1;overflow-y:auto;}
+    .orders-section h6{font-size:.78rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+    .order-card-delivery{border:1px solid #f1f5f9;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;cursor:pointer;transition:box-shadow .2s,border-color .2s;}
+    .order-card-delivery:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-color:var(--green-mid);}
+    .order-card-delivery.active-order{border-color:var(--green);background:#f0fdf4;}
+    .bottom-nav{background:#fff;border-top:1px solid #f1f5f9;display:flex;padding:10px 0 14px;margin-top:auto;}
+    .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#94a3b8;font-size:.6rem;font-weight:700;text-decoration:none;cursor:pointer;}
+    .bottom-nav a.active{color:var(--green);}
+    .bottom-nav a i{font-size:1.2rem;}
+    .map-placeholder{height:180px;background:linear-gradient(135deg,#e0f2fe,#bae6fd);position:relative;overflow:hidden;}
+    .map-placeholder::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 20px,rgba(100,149,200,.1) 20px,rgba(100,149,200,.1) 21px),repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(100,149,200,.1) 20px,rgba(100,149,200,.1) 21px);}
+    .map-route{position:absolute;top:50%;left:20%;width:60%;height:3px;background:var(--green);border-radius:2px;}
+    .map-pin{position:absolute;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+    .map-pin.origin{background:var(--green);color:#fff;top:calc(50% - 15px);left:17%;}
+    .map-pin.dest{background:#ef4444;color:#fff;top:calc(50% - 15px);right:15%;}
+    .route-info-bar{background:#fff;padding:12px 16px;display:flex;gap:16px;border-bottom:1px solid #f1f5f9;}
+    .ri-label{font-size:.62rem;font-weight:700;color:#94a3b8;text-transform:uppercase;}
+    .ri-val{font-size:.9rem;font-weight:800;color:#0f172a;}
+    .action-btn{flex:1;border-radius:10px;padding:10px 8px;font-size:.78rem;font-weight:800;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+    .action-btn i{font-size:1.2rem;}
+    .action-btn.call{background:#dcfce7;color:var(--green);}
+    .action-btn.chat-btn{background:#dbeafe;color:#1d4ed8;}
+    .btn-enroute{margin:0 16px 14px;background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:800;width:calc(100% - 32px);box-shadow:0 4px 12px rgba(21,128,61,.3);cursor:pointer;}
+    .signature-area{margin:0 16px 12px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#94a3b8;font-size:.8rem;font-weight:600;cursor:crosshair;position:relative;overflow:hidden;}
+    .signature-area canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+    .signature-area .sig-placeholder{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;}
+    .photo-area{margin:0 16px 12px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#94a3b8;font-size:.8rem;font-weight:600;cursor:pointer;transition:border .2s;}
+    .photo-area:hover{border-color:var(--green);background:#f0fdf4;}
+    .photo-area.has-photo{border-color:var(--green);background:#f0fdf4;color:var(--green);}
+    .success-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+    .success-circle{width:88px;height:88px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:#fff;margin-bottom:20px;box-shadow:0 8px 24px rgba(21,128,61,.35);}
+    .btn-home-green{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-weight:800;font-size:.9rem;width:100%;cursor:pointer;}
+    .toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;}
+    .hist-item{padding:10px 16px;border-bottom:1px solid #f1f5f9;font-size:.82rem;}
+    .hist-item .hid{font-weight:800;color:var(--green);}
+    .hist-item .hdet{color:#64748b;font-size:.75rem;}
+    .chat-bubble{padding:8px 12px;border-radius:12px;font-size:.82rem;margin-bottom:8px;max-width:80%;}
+    .chat-bubble.sent{background:var(--green);color:#fff;align-self:flex-end;border-radius:12px 12px 0 12px;}
+    .chat-bubble.recv{background:#f1f5f9;color:#334155;align-self:flex-start;border-radius:12px 12px 12px 0;}
+
+    /* PANEL CONTROL (desktop) */
+    .control-panel{max-width:1200px;margin:0 auto 32px;}
+    .cp-header{color:#fff;font-weight:800;font-size:1rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+    .cp-card{background:rgba(255,255,255,.08);border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);}
+    .cp-card h6{color:rgba(255,255,255,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+    .cp-val{color:#fff;font-size:1.4rem;font-weight:800;}
+    .cp-sub{color:rgba(255,255,255,.5);font-size:.72rem;}
+
+    @media(max-width:600px){.phones-grid{flex-direction:column;align-items:center;}.phone-frame{width:100%;}}
+  </style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- HEADER -->
+<div class="page-header">
+  <h4><i class="bi bi-bicycle me-2"></i>Repartidor – Módulo de Entregas</h4>
+  <p>Interactúa con los teléfonos para simular el flujo completo</p>
+</div>
+
+<!-- PANEL DE CONTROL DESKTOP -->
+<div class="control-panel">
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Estado</h6><div class="cp-val" id="cp-estado">Disponible</div><div class="cp-sub" id="cp-estado-sub">Listo para recibir</div></div></div>
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Pedidos Asignados</h6><div class="cp-val" id="cp-pedidos">3</div><div class="cp-sub">En cola</div></div></div>
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Entregas Hoy</h6><div class="cp-val" id="cp-entregas">0</div><div class="cp-sub">Completadas</div></div></div>
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Ganancia Hoy</h6><div class="cp-val" id="cp-ganancia">$0</div><div class="cp-sub">Comisión 8%</div></div></div>
+  </div>
+</div>
+
+<!-- 4 PHONES -->
+<div class="phones-grid">
+
+  <!-- PHONE 1: INICIO -->
+  <div class="phone-wrap">
+    <span class="phone-step-label">1 · Inicio</span>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span class="time" id="clock1">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+        <div class="app-topbar">
+          <button class="menu-btn" onclick="openMenu()"><i class="bi bi-list"></i></button>
+          <span class="app-title">MiMini</span>
+          <div class="avatar-sm" id="topbarAvatarR">R</div>
+        </div>
+        <!-- TOGGLE DISPONIBILIDAD -->
+        <div class="toggle-bar">
+          <div>
+            <div class="label">Disponible para recibir pedidos</div>
+            <div class="sublabel" id="toggleLabel">Estado: En línea</div>
+          </div>
+          <div class="big-toggle on" id="availToggle" onclick="toggleAvailability()"></div>
+        </div>
+        <!-- PEDIDOS -->
+        <div class="orders-section">
+          <h6>Pedidos Asignados</h6>
+          <div id="ordersList"></div>
+        </div>
+        <div class="bottom-nav">
+          <a class="active"><i class="bi bi-house-fill"></i>Inicio</a>
+          <a onclick="showScreen('historial')"><i class="bi bi-clock-history"></i>Historial</a>
+          <a onclick="showScreen('perfil')"><i class="bi bi-person"></i>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHONE 2: RUTA ACTIVA -->
+  <div class="phone-wrap">
+    <span class="phone-step-label">2 · Ruta Activa</span>
+    <div class="phone-frame">
+      <div class="phone-screen" id="screen-ruta">
+        <div class="status-bar"><span class="time">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+        <div class="app-topbar">
+          <button class="menu-btn" onclick="backToInicio()"><i class="bi bi-arrow-left"></i></button>
+          <span class="app-title">Ruta Activa</span>
+          <div style="width:30px;"></div>
+        </div>
+        <!-- ORDER ACTIVE CARD -->
+        <div style="padding:0 16px 12px;">
+          <div class="order-card-delivery active-order" style="cursor:default;">
+            <div style="font-weight:800;font-size:.88rem;" id="ruta-orderId">Pedido #1058</div>
+            <div style="font-size:.8rem;color:#64748b;" id="ruta-client">María López</div>
+            <div style="font-size:.75rem;color:#94a3b8;" id="ruta-dir">Calle 10 # 45-23</div>
+          </div>
+        </div>
+        <!-- MAP -->
+        <div class="map-placeholder">
+          <div class="map-route" id="mapRoute" style="transition:width 2s;"></div>
+          <div class="map-pin origin"><i class="bi bi-shop-window"></i></div>
+          <div class="map-pin dest"><i class="bi bi-geo-alt-fill"></i></div>
+          <div id="mapLabel" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:.62rem;font-weight:700;border-radius:20px;padding:2px 10px;">MiMini → Destino</div>
+          <!-- PROGRESS BAR ON MAP -->
+          <div id="routeProgress" style="position:absolute;bottom:0;left:0;height:4px;background:var(--green);width:0%;transition:width 0.5s;"></div>
+        </div>
+        <!-- ROUTE INFO -->
+        <div class="route-info-bar">
+          <div><div class="ri-label">Distancia</div><div class="ri-val" id="ruta-dist">3.2 km</div></div>
+          <div><div class="ri-label">Tiempo est.</div><div class="ri-val" id="ruta-tiempo">12 min</div></div>
+          <div class="ms-auto"><div class="ri-label">Total</div><div class="ri-val" style="color:var(--green);" id="ruta-valor">$25.600</div></div>
+        </div>
+        <!-- ACTIONS -->
+        <div style="padding:12px 16px;display:flex;gap:10px;">
+          <button class="action-btn call" onclick="callClient()"><i class="bi bi-telephone-fill"></i>Llamar</button>
+          <button class="action-btn chat-btn" onclick="showScreen('chat')"><i class="bi bi-chat-dots-fill"></i>Chat</button>
+          <button class="action-btn" style="background:#fef3c7;color:#d97706;" onclick="reportarProblema()"><i class="bi bi-exclamation-triangle-fill"></i>Problema</button>
+        </div>
+        <!-- ESTADO BUTTON -->
+        <div style="padding:0 16px 14px;">
+          <div id="statusBtnArea">
+            <button class="btn-enroute" style="width:100%;margin:0;" id="enrouteBtn" onclick="marcarEnCamino()">
+              <i class="bi bi-truck me-2"></i>Marcar como "En Camino"
+            </button>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <a onclick="backToInicio()"><i class="bi bi-house-fill"></i>Inicio</a>
+          <a><i class="bi bi-clock-history"></i>Historial</a>
+          <a><i class="bi bi-person"></i>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHONE 3: CONFIRMACIÓN -->
+  <div class="phone-wrap">
+    <span class="phone-step-label">3 · Confirmar Entrega</span>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span class="time">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+        <div class="app-topbar">
+          <button class="menu-btn" onclick="backToRuta()"><i class="bi bi-arrow-left"></i></button>
+          <span class="app-title">Confirmar Entrega</span>
+          <div style="width:30px;"></div>
+        </div>
+        <div style="padding:0 16px 12px;">
+          <div class="order-card-delivery active-order" style="cursor:default;">
+            <div style="font-weight:800;font-size:.88rem;" id="conf-orderId">Pedido #1058 · María López</div>
+            <div style="font-size:.75rem;color:#94a3b8;" id="conf-dir">Calle 10 # 45-23</div>
+          </div>
+        </div>
+        <!-- FIRMA -->
+        <div style="padding:0 16px 4px;"><small style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Firma Digital del Cliente *</small></div>
+        <div class="signature-area" id="signatureArea">
+          <canvas id="signCanvas"></canvas>
+          <div class="sig-placeholder" id="sigPlaceholder"><i class="bi bi-pen" style="font-size:1.6rem;color:#cbd5e1;"></i><span>Firma aquí</span></div>
+        </div>
+        <div style="padding:0 16px;margin-bottom:8px;display:flex;gap:8px;">
+          <button style="flex:1;background:#f5f3ff;border:none;border-radius:8px;padding:5px;font-size:.72rem;font-weight:700;color:#7c3aed;cursor:pointer;" onclick="clearSignature()"><i class="bi bi-eraser me-1"></i>Limpiar</button>
+          <div id="sigStatus" style="font-size:.72rem;color:#94a3b8;display:flex;align-items:center;padding:0 8px;"></div>
+        </div>
+        <!-- FOTO EVIDENCIA -->
+        <div style="padding:0 16px 4px;"><small style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Evidencia de Entrega (Foto)</small></div>
+        <div class="photo-area" id="photoArea" onclick="tomarFoto()">
+          <i class="bi bi-camera" style="font-size:1.6rem;"></i>
+          <span id="photoLabel">Tomar Foto</span>
+        </div>
+        <!-- CONFIRMAR -->
+        <div style="padding:0 16px 14px;">
+          <button style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:800;box-shadow:0 4px 12px rgba(21,128,61,.3);cursor:pointer;" onclick="confirmarEntrega()">
+            <i class="bi bi-check-circle me-2"></i>Confirmar Entrega
+          </button>
+        </div>
+        <div class="bottom-nav">
+          <a onclick="backToRuta()"><i class="bi bi-house-fill"></i>Inicio</a>
+          <a><i class="bi bi-clock-history"></i>Historial</a>
+          <a><i class="bi bi-person"></i>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHONE 4: COMPLETADO / HISTORIAL / PERFIL / CHAT -->
+  <div class="phone-wrap">
+    <span class="phone-step-label" id="phone4Label">4 · Pedido Completado</span>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span class="time">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+
+        <!-- SCREEN: COMPLETADO -->
+        <div id="screen-completado" style="display:flex;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <div style="width:30px;"></div>
+            <span class="app-title">Pedido Completado</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div class="success-screen">
+            <div class="success-circle"><i class="bi bi-check-lg"></i></div>
+            <div style="font-size:1.1rem;font-weight:800;color:#0f172a;margin-bottom:6px;">¡Entrega Confirmada!</div>
+            <div style="font-size:.85rem;color:#64748b;margin-bottom:16px;line-height:1.5;">El pedido fue entregado exitosamente.</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--green);" id="done-valor">$25.600</div>
+            <div style="font-size:.82rem;color:#64748b;margin-bottom:20px;" id="done-info">Pedido #1058 · María López</div>
+            <div style="background:var(--green-light);color:var(--green-dark);border-radius:20px;padding:6px 16px;font-size:.75rem;font-weight:700;margin-bottom:24px;" id="done-rating">⭐ ¡Gracias por tu excelente servicio!</div>
+            <div style="width:100%;background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
+              <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Resumen</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:.82rem;"><span>Valor pedido</span><span id="done-totalPedido" class="fw-bold">$25.600</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:.82rem;"><span>Tu comisión (8%)</span><span id="done-comision" style="color:var(--green);font-weight:800;">$2.048</span></div>
+            </div>
+            <button class="btn-home-green" onclick="nuevoInicio()"><i class="bi bi-house me-2"></i>Volver al Inicio</button>
+          </div>
+        </div>
+
+        <!-- SCREEN: HISTORIAL -->
+        <div id="screen-historial" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <button class="menu-btn" onclick="showScreen('inicio4')"><i class="bi bi-arrow-left"></i></button>
+            <span class="app-title">Historial de Entregas</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;" id="historialList"><div style="text-align:center;padding:40px 16px;color:#94a3b8;"><i class="bi bi-clock-history" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Sin entregas completadas aún</div></div>
+          <div class="bottom-nav">
+            <a onclick="showScreen('inicio4')"><i class="bi bi-house-fill"></i>Inicio</a>
+            <a class="active"><i class="bi bi-clock-history"></i>Historial</a>
+            <a onclick="showScreen('perfil')"><i class="bi bi-person"></i>Perfil</a>
+          </div>
+        </div>
+
+        <!-- SCREEN: PERFIL -->
+        <div id="screen-perfil" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <button class="menu-btn" onclick="showScreen('inicio4')"><i class="bi bi-arrow-left"></i></button>
+            <span class="app-title">Mi Perfil</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:16px;">
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="width:72px;height:72px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;margin:0 auto 10px;">C</div>
+              <div style="font-weight:800;font-size:1rem;">Carlos Pérez</div>
+              <div style="font-size:.78rem;color:#64748b;">Repartidor · MiMini</div>
+              <div style="background:var(--green-light);color:var(--green);border-radius:20px;padding:3px 14px;font-size:.72rem;font-weight:700;display:inline-block;margin-top:6px;">⭐ 4.9 Calificación</div>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:12px;">
+              <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Mis Estadísticas</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.83rem;"><span class="text-muted">Entregas totales</span><strong id="prf-total">0</strong></div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.83rem;"><span class="text-muted">Entregas hoy</span><strong id="prf-hoy">0</strong></div>
+              <div style="display:flex;justify-content:space-between;font-size:.83rem;"><span class="text-muted">Ganancia acumulada</span><strong style="color:var(--green);" id="prf-ganancia">$0</strong></div>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:12px;">
+              <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Datos Personales</div>
+              <div style="margin-bottom:10px;"><label style="font-size:.72rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Nombre</label><input type="text" id="prf-nombre" value="Carlos Pérez" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.85rem;"/></div>
+              <div style="margin-bottom:10px;"><label style="font-size:.72rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Teléfono</label><input type="text" id="prf-tel" value="315 888 9999" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.85rem;"/></div>
+              <div style="margin-bottom:10px;"><label style="font-size:.72rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Vehículo</label>
+                <select id="prf-vehiculo" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.85rem;">
+                  <option>Moto</option><option>Bicicleta</option><option>A pie</option>
+                </select>
+              </div>
+              <button style="width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;" onclick="savePerfil()">Guardar Cambios</button>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <a onclick="showScreen('inicio4')"><i class="bi bi-house-fill"></i>Inicio</a>
+            <a onclick="showScreen('historial')"><i class="bi bi-clock-history"></i>Historial</a>
+            <a class="active"><i class="bi bi-person"></i>Perfil</a>
+          </div>
+        </div>
+
+        <!-- SCREEN: CHAT -->
+        <div id="screen-chat" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <button class="menu-btn" onclick="showScreen('inicio4')"><i class="bi bi-arrow-left"></i></button>
+            <span class="app-title" id="chatTitle">Chat – Cliente</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:4px;" id="chatMessages"></div>
+          <div style="padding:10px 16px;border-top:1px solid #f1f5f9;display:flex;gap:8px;">
+            <input type="text" id="chatInput" style="flex:1;border:1.5px solid #e2e8f0;border-radius:20px;padding:8px 14px;font-size:.85rem;outline:none;" placeholder="Escribe un mensaje…" onkeydown="if(event.key==='Enter')sendMsg()"/>
+            <button style="background:var(--green);border:none;width:36px;height:36px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="sendMsg()"><i class="bi bi-send-fill" style="font-size:.85rem;"></i></button>
+          </div>
+        </div>
+
+        <!-- SCREEN: INICIO (copy para phone 4) -->
+        <div id="screen-inicio4" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <div style="width:30px;"></div>
+            <span class="app-title">MiMini</span>
+            <div class="avatar-sm">C</div>
+          </div>
+          <div style="padding:0 16px 12px;flex:1;overflow-y:auto;">
+            <h6 style="font-size:.78rem;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Estado del día</h6>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+              <div style="background:#f0fdf4;border-radius:10px;padding:12px;"><div style="font-size:.65rem;font-weight:700;color:#64748b;text-transform:uppercase;">Entregas</div><div style="font-size:1.2rem;font-weight:800;color:var(--green);" id="ph4-entregas">0</div></div>
+              <div style="background:#eff6ff;border-radius:10px;padding:12px;"><div style="font-size:.65rem;font-weight:700;color:#64748b;text-transform:uppercase;">Ganancia</div><div style="font-size:1.2rem;font-weight:800;color:#2563eb;" id="ph4-ganancia">$0</div></div>
+            </div>
+            <div id="ph4-orders"></div>
+          </div>
+          <div class="bottom-nav">
+            <a class="active"><i class="bi bi-house-fill"></i>Inicio</a>
+            <a onclick="showScreen('historial')"><i class="bi bi-clock-history"></i>Historial</a>
+            <a onclick="showScreen('perfil')"><i class="bi bi-person"></i>Perfil</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<!-- MENU MODAL -->
+<div class="modal fade" id="menuModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body p-0">
+        <div style="padding:20px 16px 8px;border-bottom:1px solid #f1f5f9;">
+          <div class="d-flex align-items-center gap-3 mb-1">
+            <div style="width:44px;height:44px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;" id="menuAvatar">C</div>
+            <div><div style="font-weight:800;" id="menuUserName">Carlos Pérez</div><div style="font-size:.78rem;color:#64748b;">Repartidor</div></div>
+          </div>
+        </div>
+        <div style="padding:8px 0;">
+          <div style="padding:10px 20px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:10px;" onclick="showScreen('historial');document.getElementById('menuModal').querySelector('[data-bs-dismiss]').click()"><i class="bi bi-clock-history text-primary"></i>Historial</div>
+          <div style="padding:10px 20px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:10px;" onclick="showScreen('perfil');document.getElementById('menuModal').querySelector('[data-bs-dismiss]').click()"><i class="bi bi-person text-primary"></i>Mi Perfil</div>
+          <div style="padding:10px 20px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:10px;" onclick="handleLogout();document.getElementById('menuModal').querySelector('[data-bs-dismiss]').click()"><i class="bi bi-box-arrow-right text-danger"></i>Cerrar Sesión</div>
+        </div>
+        <div style="padding:8px 16px 16px;"><button class="btn btn-outline-secondary w-100" data-bs-dismiss="modal" style="border-radius:10px;font-weight:700;">Cancelar</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEMA MODAL -->
+<div class="modal fade" id="problemaModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0"><h5 class="modal-title fw-800">Reportar Problema</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label fw-bold">Tipo de Problema *</label>
+          <select class="form-select" id="prob-tipo" style="border-radius:8px;">
+            <option value="">Seleccionar…</option>
+            <option>Dirección incorrecta</option>
+            <option>Cliente no contesta</option>
+            <option>No hay nadie en la dirección</option>
+            <option>Problema con el producto</option>
+            <option>Accidente / emergencia</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label fw-bold">Descripción</label><textarea class="form-control" id="prob-desc" rows="3" placeholder="Describe el problema…" style="border-radius:8px;"></textarea></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-warning fw-bold" style="border-radius:8px;" onclick="enviarProblema()">Enviar Reporte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:var(--green);"></i>
+        <h6 class="fw-800 mt-3 mb-4">¿Cerrar sesión?</h6>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn flex-grow-1 text-white fw-bold" style="background:var(--green);" onclick="confirmLogout()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ============ DATA ============
+let available = true;
+let pedidos = [
+  {id:'#1058',client:'María López',dir:'Calle 10 # 45-23',valor:25600,status:'Asignado'},
+  {id:'#1057',client:'Juan Pérez',dir:'Cra 80 # 15-30',valor:32800,status:'Asignado'},
+  {id:'#1056',client:'Ana Torres',dir:'Calle 5 # 12-40',valor:18500,status:'Asignado'},
+];
+let entregasHoy = [];
+let gananciaHoy = 0;
+let currentPedido = null;
+let enCamino = false;
+let routeInterval = null;
+let routeProgress = 0;
+let signatureSigned = false;
+let hasPhoto = false;
+let chatMessages = [];
+let signCanvas, signCtx, drawing = false;
+
+// ============ CLOCK ============
+function updateClock() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+  document.querySelectorAll('.time').forEach(el => el.textContent = t);
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ============ TOAST ============
+function showToast(msg, type='success') {
+  const id = 't'+Date.now();
+  const color = type==='success'?'#15803d':type==='danger'?'#dc2626':type==='warning'?'#d97706':'#2563eb';
+  const icon = type==='success'?'bi-check-circle-fill':type==='danger'?'bi-x-circle-fill':type==='warning'?'bi-exclamation-triangle-fill':'bi-info-circle-fill';
+  document.getElementById('toastContainer').insertAdjacentHTML('beforeend',
+    `<div id="${id}" class="toast show text-white border-0 mb-2" style="background:${color};border-radius:12px;min-width:260px;"><div class="d-flex align-items-center gap-2 p-3"><i class="bi ${icon} fs-5"></i><span style="font-size:.88rem;font-weight:700;">${msg}</span><button class="btn-close btn-close-white ms-auto" onclick="document.getElementById('${id}').remove()"></button></div></div>`);
+  setTimeout(()=>{const t=document.getElementById(id);if(t)t.remove();},3500);
+}
+
+// ============ TOGGLE AVAILABILITY ============
+function toggleAvailability() {
+  available = !available;
+  const tog = document.getElementById('availToggle');
+  const lbl = document.getElementById('toggleLabel');
+  tog.className = 'big-toggle ' + (available?'on':'off');
+  lbl.textContent = available ? 'Estado: En línea' : 'Estado: No disponible';
+  document.getElementById('cp-estado').textContent = available ? 'Disponible' : 'No disponible';
+  document.getElementById('cp-estado-sub').textContent = available ? 'Listo para recibir' : 'Pausado';
+  showToast(available ? '✅ Ahora estás disponible' : '⏸ Te marcaste como no disponible', available?'success':'warning');
+}
+
+// ============ RENDER ORDERS ============
+function renderOrders() {
+  const el = document.getElementById('ordersList');
+  const ph4 = document.getElementById('ph4-orders');
+  if(!pedidos.length) {
+    el.innerHTML='<div style="text-align:center;padding:30px 0;color:#94a3b8;font-size:.85rem;"><i class="bi bi-check-all" style="font-size:2rem;display:block;margin-bottom:8px;color:var(--green);"></i>Sin pedidos pendientes</div>';
+    if(ph4) ph4.innerHTML=el.innerHTML;
+    return;
+  }
+  const html = pedidos.map(p=>`
+    <div class="order-card-delivery" onclick="abrirPedido('${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-weight:800;font-size:.9rem;">${p.id}</div>
+          <div style="font-size:.8rem;color:#64748b;">${p.client}</div>
+          <div style="font-size:.75rem;color:#94a3b8;">${p.dir}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:.95rem;font-weight:800;color:var(--green);">$${p.valor.toLocaleString('es-CO')}</div>
+          <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:.9rem;"></i>
+        </div>
+      </div>
+    </div>`).join('');
+  el.innerHTML = html;
+  if(ph4) ph4.innerHTML = html;
+  document.getElementById('cp-pedidos').textContent = pedidos.length;
+}
+
+// ============ ABRIR PEDIDO (Phone 2) ============
+function abrirPedido(id) {
+  const p = pedidos.find(x=>x.id===id);
+  currentPedido = p;
+  // Populate Phone 2
+  document.getElementById('ruta-orderId').textContent = 'Pedido '+p.id;
+  document.getElementById('ruta-client').textContent = p.client;
+  document.getElementById('ruta-dir').textContent = p.dir;
+  document.getElementById('ruta-valor').textContent = '$'+p.valor.toLocaleString('es-CO');
+  // Random distance
+  const km = (Math.random()*5+1).toFixed(1);
+  const min = Math.round(km*3+2);
+  document.getElementById('ruta-dist').textContent = km+' km';
+  document.getElementById('ruta-tiempo').textContent = min+' min';
+  // Reset route
+  enCamino = false;
+  routeProgress = 0;
+  document.getElementById('routeProgress').style.width = '0%';
+  document.getElementById('enrouteBtn').textContent = '';
+  document.getElementById('enrouteBtn').innerHTML = '<i class="bi bi-truck me-2"></i>Marcar como "En Camino"';
+  document.getElementById('enrouteBtn').style.background = 'var(--green)';
+  document.getElementById('statusBtnArea').innerHTML = `<button class="btn-enroute" style="width:100%;margin:0;" id="enrouteBtn" onclick="marcarEnCamino()"><i class="bi bi-truck me-2"></i>Marcar como "En Camino"</button>`;
+  // Phone 3 fill
+  document.getElementById('conf-orderId').textContent = 'Pedido '+p.id+' · '+p.client;
+  document.getElementById('conf-dir').textContent = p.dir;
+  // Reset signature & photo
+  signatureSigned = false;
+  hasPhoto = false;
+  document.getElementById('sigStatus').textContent = '';
+  document.getElementById('sigPlaceholder').style.display = 'flex';
+  document.getElementById('photoArea').className = 'photo-area';
+  document.getElementById('photoLabel').textContent = 'Tomar Foto';
+  clearSignature(true);
+  showToast('📍 Pedido '+p.id+' abierto – '+p.client);
+}
+
+// ============ MARCAR EN CAMINO ============
+function marcarEnCamino() {
+  if(!currentPedido){showToast('Selecciona un pedido primero','warning');return;}
+  enCamino = true;
+  const btn = document.getElementById('enrouteBtn');
+  btn.innerHTML = '<i class="bi bi-truck me-2"></i>En Camino…';
+  btn.style.background = '#d97706';
+  showToast('🚴 ¡En camino a '+currentPedido.client+'!');
+  // Animate route progress
+  routeProgress = 0;
+  clearInterval(routeInterval);
+  routeInterval = setInterval(() => {
+    routeProgress += 2;
+    document.getElementById('routeProgress').style.width = routeProgress+'%';
+    if(routeProgress >= 100) {
+      clearInterval(routeInterval);
+      document.getElementById('statusBtnArea').innerHTML = `<button style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.3);" onclick="showConfirmScreen()"><i class="bi bi-check-circle me-2"></i>¡Llegué! Confirmar Entrega</button>`;
+      showToast('📦 ¡Has llegado al destino!','info');
+    }
+  }, 80);
+}
+
+function showConfirmScreen() {
+  // just a hint to go to Phone 3
+  showToast('📝 Completa la confirmación en el teléfono 3');
+}
+
+// ============ LLAMAR CLIENTE ============
+function callClient() {
+  if(!currentPedido){showToast('Selecciona un pedido primero','warning');return;}
+  showToast('📞 Llamando a '+currentPedido.client+'…','info');
+  setTimeout(()=>showToast('📞 Llamada conectada con '+currentPedido.client,'success'),1800);
+}
+
+// ============ CHAT ============
+function showScreen(name) {
+  const screens = ['completado','historial','perfil','chat','inicio4'];
+  screens.forEach(s => {
+    const el = document.getElementById('screen-'+s);
+    if(el) el.style.display = 'none';
+  });
+  const target = document.getElementById('screen-'+name);
+  if(target) target.style.display = 'flex';
+  document.getElementById('phone4Label').textContent = {
+    completado:'4 · Pedido Completado',
+    historial:'4 · Historial',
+    perfil:'4 · Perfil',
+    chat:'4 · Chat Cliente',
+    inicio4:'4 · Vista General'
+  }[name] || '4';
+  if(name==='historial') renderHistorial();
+  if(name==='perfil') renderPerfil();
+  if(name==='inicio4') renderPh4();
+  if(name==='chat') renderChat();
+}
+
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  chatMessages.push({text:msg,sent:true,time:new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})});
+  input.value='';
+  renderChat();
+  // Auto reply
+  setTimeout(() => {
+    const replies = ['Ok, te espero','¿Cuánto demora?','Gracias!','Perfecto, ya voy a la puerta','Está bien, sin problema'];
+    chatMessages.push({text:replies[Math.floor(Math.random()*replies.length)],sent:false,time:new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})});
+    renderChat();
+  }, 1200);
+}
+
+function renderChat() {
+  const name = currentPedido ? currentPedido.client : 'Cliente';
+  document.getElementById('chatTitle').textContent = 'Chat – '+name;
+  const el = document.getElementById('chatMessages');
+  if(!chatMessages.length){el.innerHTML='<div style="text-align:center;color:#94a3b8;font-size:.82rem;padding:20px;">Inicia la conversación</div>';return;}
+  el.innerHTML = chatMessages.map(m=>`
+    <div style="display:flex;justify-content:${m.sent?'flex-end':'flex-start'};margin-bottom:6px;">
+      <div>
+        <div class="chat-bubble ${m.sent?'sent':'recv'}">${m.text}</div>
+        <div style="font-size:.62rem;color:#94a3b8;text-align:${m.sent?'right':'left'};margin-top:2px;">${m.time}</div>
+      </div>
+    </div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============ SIGNATURE ============
+function initSignCanvas() {
+  const canvas = document.getElementById('signCanvas');
+  if(!canvas) return;
+  const area = document.getElementById('signatureArea');
+  canvas.width = area.offsetWidth || 280;
+  canvas.height = area.offsetHeight || 120;
+  signCtx = canvas.getContext('2d');
+  signCtx.strokeStyle = '#1a1a1a';
+  signCtx.lineWidth = 2.5;
+  signCtx.lineCap = 'round';
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return {x:(src.clientX-r.left)*(canvas.width/r.width), y:(src.clientY-r.top)*(canvas.height/r.height)};
+  };
+
+  canvas.addEventListener('mousedown', e=>{drawing=true;const p=getPos(e);signCtx.beginPath();signCtx.moveTo(p.x,p.y);});
+  canvas.addEventListener('mousemove', e=>{if(!drawing)return;const p=getPos(e);signCtx.lineTo(p.x,p.y);signCtx.stroke();});
+  canvas.addEventListener('mouseup', ()=>{if(drawing){drawing=false;signatureSigned=true;document.getElementById('sigPlaceholder').style.display='none';document.getElementById('sigStatus').textContent='✅ Firma registrada';}});
+  canvas.addEventListener('touchstart', e=>{e.preventDefault();drawing=true;const p=getPos(e);signCtx.beginPath();signCtx.moveTo(p.x,p.y);},{passive:false});
+  canvas.addEventListener('touchmove', e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);signCtx.lineTo(p.x,p.y);signCtx.stroke();},{passive:false});
+  canvas.addEventListener('touchend', ()=>{if(drawing){drawing=false;signatureSigned=true;document.getElementById('sigPlaceholder').style.display='none';document.getElementById('sigStatus').textContent='✅ Firma registrada';}});
+}
+
+function clearSignature(silent=false) {
+  if(signCtx) signCtx.clearRect(0,0,signCanvas ? signCanvas.width:300,signCanvas?signCanvas.height:120);
+  signatureSigned = false;
+  const ph = document.getElementById('sigPlaceholder');
+  if(ph) ph.style.display='flex';
+  const st = document.getElementById('sigStatus');
+  if(st) st.textContent='';
+  if(!silent) showToast('Firma borrada','warning');
+}
+
+// ============ TOMAR FOTO ============
+function tomarFoto() {
+  const area = document.getElementById('photoArea');
+  const lbl = document.getElementById('photoLabel');
+  if(hasPhoto) { hasPhoto=false; area.className='photo-area'; lbl.textContent='Tomar Foto'; showToast('Foto eliminada','warning'); return; }
+  showToast('📸 Procesando foto…','info');
+  setTimeout(()=>{
+    hasPhoto=true;
+    area.className='photo-area has-photo';
+    lbl.textContent='✅ Foto capturada (toca para eliminar)';
+    area.innerHTML='';
+    area.innerHTML='<i class="bi bi-check-circle-fill" style="font-size:1.6rem;"></i><span id="photoLabel">✅ Foto capturada (toca para eliminar)</span>';
+    showToast('📸 Foto de evidencia guardada');
+  },800);
+}
+
+// ============ CONFIRMAR ENTREGA ============
+function confirmarEntrega() {
+  if(!currentPedido){showToast('Selecciona un pedido primero','warning');return;}
+  if(!signatureSigned){showToast('El cliente debe firmar primero','danger');return;}
+  if(!hasPhoto){showToast('Toma una foto como evidencia','danger');return;}
+  // Complete order
+  const p = currentPedido;
+  const comision = Math.round(p.valor * 0.08);
+  gananciaHoy += comision;
+  entregasHoy.push({...p, comision, fecha: new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})});
+  pedidos = pedidos.filter(x=>x.id!==p.id);
+  // Update Phone 4 completion screen
+  document.getElementById('done-valor').textContent = '$'+p.valor.toLocaleString('es-CO');
+  document.getElementById('done-info').textContent = 'Pedido '+p.id+' · '+p.client;
+  document.getElementById('done-totalPedido').textContent = '$'+p.valor.toLocaleString('es-CO');
+  document.getElementById('done-comision').textContent = '$'+comision.toLocaleString('es-CO');
+  // Update KPIs
+  document.getElementById('cp-entregas').textContent = entregasHoy.length;
+  document.getElementById('cp-ganancia').textContent = '$'+gananciaHoy.toLocaleString('es-CO');
+  document.getElementById('cp-pedidos').textContent = pedidos.length;
+  clearInterval(routeInterval);
+  routeProgress = 0;
+  showToast('🎉 ¡Entrega confirmada exitosamente!');
+  showScreen('completado');
+  renderOrders();
+  currentPedido = null;
+}
+
+// ============ NUEVO INICIO ============
+function nuevoInicio() {
+  showScreen('inicio4');
+  renderOrders();
+}
+
+// ============ BACK ============
+function backToInicio() { showToast('Volviendo al inicio','info'); }
+function backToRuta() { showToast('Volviendo a la ruta','info'); }
+
+// ============ HISTORIAL ============
+function renderHistorial() {
+  const el = document.getElementById('historialList');
+  if(!entregasHoy.length){el.innerHTML='<div style="text-align:center;padding:40px 16px;color:#94a3b8;"><i class="bi bi-clock-history" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Sin entregas completadas aún</div>';return;}
+  el.innerHTML = entregasHoy.map(e=>`
+    <div class="hist-item">
+      <div style="display:flex;justify-content:space-between;">
+        <div class="hid">${e.id}</div>
+        <div style="font-size:.75rem;color:#94a3b8;">${e.fecha}</div>
+      </div>
+      <div class="hdet">${e.client} · ${e.dir}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:.78rem;font-weight:700;color:var(--green);">$${e.valor.toLocaleString('es-CO')}</span>
+        <span style="font-size:.75rem;color:#64748b;">Comisión: $${e.comision.toLocaleString('es-CO')}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ============ PERFIL ============
+function renderPerfil() {
+  document.getElementById('prf-total').textContent = entregasHoy.length;
+  document.getElementById('prf-hoy').textContent = entregasHoy.length;
+  document.getElementById('prf-ganancia').textContent = '$'+gananciaHoy.toLocaleString('es-CO');
+}
+
+function savePerfil() {
+  const nombre = document.getElementById('prf-nombre').value.trim();
+  if(!nombre){showToast('El nombre es obligatorio','danger');return;}
+  showToast('Perfil actualizado correctamente ✅');
+}
+
+// ============ PH4 ============
+function renderPh4() {
+  document.getElementById('ph4-entregas').textContent = entregasHoy.length;
+  document.getElementById('ph4-ganancia').textContent = '$'+gananciaHoy.toLocaleString('es-CO');
+  renderOrders();
+}
+
+// ============ PROBLEMA ============
+function reportarProblema() { new bootstrap.Modal(document.getElementById('problemaModal')).show(); }
+function enviarProblema() {
+  const tipo = document.getElementById('prob-tipo').value;
+  if(!tipo){showToast('Selecciona el tipo de problema','danger');return;}
+  showToast('⚠️ Problema reportado al administrador','warning');
+  bootstrap.Modal.getInstance(document.getElementById('problemaModal')).hide();
+}
+
+// ============ MENU / LOGOUT ============
+function openMenu() { new bootstrap.Modal(document.getElementById('menuModal')).show(); }
+function handleLogout() { new bootstrap.Modal(document.getElementById('logoutModal')).show(); }
+function confirmLogout() {
+  localStorage.removeItem('usuario');
+  window.location.href = 'index.html';
+}
+
+// ============ SESIÓN: MOSTRAR DATOS DEL USUARIO ============
+function aplicarSesionUsuario() {
+  const usuario = window.usuarioActual;
+  if (!usuario) return;
+  const inicial = (usuario.nombre_completo || '?').trim().charAt(0).toUpperCase();
+
+  const topbarAvatarR = document.getElementById('topbarAvatarR');
+  if (topbarAvatarR) topbarAvatarR.textContent = inicial;
+
+  const menuAvatar = document.getElementById('menuAvatar');
+  if (menuAvatar) menuAvatar.textContent = inicial;
+  const menuUserName = document.getElementById('menuUserName');
+  if (menuUserName) menuUserName.textContent = usuario.nombre_completo || 'Repartidor';
+
+  const prfNombre = document.getElementById('prf-nombre');
+  if (prfNombre) prfNombre.value = usuario.nombre_completo || '';
+  const prfTel = document.getElementById('prf-tel');
+  if (prfTel && usuario.telefono) prfTel.value = usuario.telefono;
+}
+
+// ============ INIT ============
+window.addEventListener('load', () => {
+  aplicarSesionUsuario();
+  initSignCanvas();
+  renderOrders();
+  // Set today's date
+  const today = new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+});
+</script>
+</body>
+</html>
