@@ -1,0 +1,243 @@
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="brand">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <div style="width:32px;height:32px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+        <i class="bi bi-bag-heart-fill" style="color:var(--green);font-size:1.1rem;"></i>
+      </div>
+      <div><h5>MiMini</h5><small>Mercado Online</small></div>
+    </div>
+  </div>
+  <div class="py-3 flex-grow-1">
+    <a class="nav-link active" onclick="showTab('catalogo',this)"><i class="bi bi-house-fill"></i> Inicio</a>
+    <a class="nav-link" onclick="showTab('perfil',this)"><i class="bi bi-person"></i> Mi Perfil</a>
+    <a class="nav-link" onclick="showTab('pedidos',this)"><i class="bi bi-receipt"></i> Mis Pedidos</a>
+    <a class="nav-link" onclick="showTab('carrito',this)"><i class="bi bi-cart3"></i> Carrito <span class="cart-badge" id="cartBadge">0</span></a>
+    <a class="nav-link" onclick="showTab('favoritos',this)"><i class="bi bi-heart"></i> Favoritos</a>
+  </div>
+  <div class="p-2 pb-4">
+    <a class="nav-link" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="search-wrap">
+      <i class="bi bi-search"></i>
+      <input type="text" id="searchInput" placeholder="Buscar productos, categorías…" oninput="filterProducts()"/>
+    </div>
+    <div class="icons">
+      <button class="icon-btn" onclick="showTab('pedidos')"><i class="bi bi-bell"></i><span class="badge-dot" id="notifBadge">2</span></button>
+      <button class="icon-btn"><i class="bi bi-chat-dots"></i></button>
+    </div>
+    <div class="user-pill" onclick="showTab('perfil')">
+      <div class="avatar" id="topbarAvatar">L</div>
+      <span>Hola, <span id="topbarUserName">Laura</span> <i class="bi bi-chevron-down" style="font-size:.7rem;"></i></span>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- TABS NAV -->
+    <ul class="nav view-tabs mb-4" id="mainTabs">
+      <li class="nav-item"><button class="nav-link active" id="tab-catalogo-btn" onclick="showTab('catalogo',this)">Catálogo</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-carrito-btn" onclick="showTab('carrito',this)">Mi Carrito (<span id="cartCount">0</span>)</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-checkout-btn" onclick="showTab('checkout',this)">Checkout</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-pedidos-btn" onclick="showTab('pedidos',this)">Mis Pedidos</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-favoritos-btn" onclick="showTab('favoritos',this)">Favoritos</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-perfil-btn" onclick="showTab('perfil',this)">Mi Perfil</button></li>
+    </ul>
+
+    <!-- TAB CATÁLOGO -->
+    <div id="tab-catalogo" class="tab-pane">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="section-title mb-0">Catálogo de Productos</h5>
+        <select class="form-select form-select-sm" style="width:180px;border-radius:8px;" onchange="sortProducts(this.value)">
+          <option value="default">Más vendidos</option>
+          <option value="price-asc">Precio: menor a mayor</option>
+          <option value="price-desc">Precio: mayor a menor</option>
+          <option value="name">Nombre A-Z</option>
+        </select>
+      </div>
+      <div class="filter-pills d-flex gap-2 flex-wrap mb-4" id="filterPills">
+        <button class="btn active" onclick="filterCat('Todas',this)">Todas</button>
+        <button class="btn" onclick="filterCat('Ofertas',this)">Ofertas</button>
+        <button class="btn" onclick="filterCat('Alimentos',this)">Alimentos</button>
+        <button class="btn" onclick="filterCat('Bebidas',this)">Bebidas</button>
+        <button class="btn" onclick="filterCat('Aseo',this)">Aseo</button>
+        <button class="btn" onclick="filterCat('Lácteos',this)">Lácteos</button>
+        <button class="btn" onclick="filterCat('Snacks',this)">Snacks</button>
+      </div>
+      <div class="row g-3" id="productsGrid"></div>
+    </div>
+
+    <!-- TAB CARRITO -->
+    <div id="tab-carrito" class="tab-pane" style="display:none;">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="checkout-section">
+            <h5 class="section-title">Mi Carrito <span class="badge bg-success rounded-pill ms-1" style="font-size:.7rem;" id="cartBadgeLabel">0 items</span></h5>
+            <div id="cartItems"></div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="checkout-section">
+            <h5 class="section-title">Resumen</h5>
+            <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal">$0</span></div>
+            <div class="summary-row"><span>Envío</span><span>$3.000</span></div>
+            <div class="summary-row total"><span>Total</span><span id="summaryTotal">$3.000</span></div>
+            <button class="btn-checkout" onclick="goCheckout()">Ir al Checkout <i class="bi bi-arrow-right ms-1"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CHECKOUT -->
+    <div id="tab-checkout" class="tab-pane" style="display:none;">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="checkout-section">
+            <h5 class="section-title">Datos de Entrega</h5>
+            <div class="row g-3">
+              <div class="col-12"><label>Nombre completo *</label><input type="text" class="form-control" id="co-nombre" value="Laura Gómez"/></div>
+              <div class="col-md-6"><label>Teléfono *</label><input type="text" class="form-control" id="co-tel" value="300 123 4567"/></div>
+              <div class="col-md-6"><label>Ciudad *</label><select class="form-select" id="co-ciudad"><option>Medellín</option><option>Bogotá</option><option>Cali</option><option>Barranquilla</option></select></div>
+              <div class="col-12"><label>Dirección exacta *</label><input type="text" class="form-control" id="co-dir" value="Calle 45 # 23-10, Apto 101"/></div>
+              <div class="col-md-8"><label>Barrio / Referencia</label><input type="text" class="form-control" id="co-barrio" value="Barrio Centro, Frente al parque"/></div>
+              <div class="col-md-4"><label>Código Postal</label><input type="text" class="form-control" id="co-cp" value="050001"/></div>
+            </div>
+            <hr class="my-4"/>
+            <h5 class="section-title">Método de Pago</h5>
+            <div class="d-flex flex-column gap-3">
+              <div class="method-card selected" id="m-efectivo" onclick="selectPayment('efectivo')">
+                <input type="radio" name="pago" checked/><i class="bi bi-cash-coin"></i>
+                <div><div class="fw-bold">Efectivo contra entrega</div><small class="text-muted">Paga al recibir tu pedido</small></div>
+              </div>
+              <div class="method-card" id="m-transferencia" onclick="selectPayment('transferencia')">
+                <input type="radio" name="pago"/><i class="bi bi-bank"></i>
+                <div><div class="fw-bold">Transferencia Bancaria</div><small class="text-muted">Nequi, Daviplata, PSE</small></div>
+              </div>
+              <div class="method-card" id="m-tarjeta" onclick="selectPayment('tarjeta')">
+                <input type="radio" name="pago"/><i class="bi bi-credit-card"></i>
+                <div><div class="fw-bold">Tarjeta débito/crédito</div><small class="text-muted">Visa, Mastercard, Amex</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="checkout-section">
+            <h5 class="section-title">Resumen del Pedido</h5>
+            <div id="checkoutItems"></div>
+            <div class="summary-row mt-2 pt-2" style="border-top:1px solid #f0f0f0;"><span>Subtotal</span><span id="coSubtotal">$0</span></div>
+            <div class="summary-row"><span>Envío</span><span>$3.000</span></div>
+            <div class="summary-row total"><span>Total</span><span id="coTotal">$3.000</span></div>
+            <button class="btn-checkout" onclick="submitOrder()"><i class="bi bi-check-circle me-1"></i>Solicitar Pedido</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB PEDIDOS -->
+    <div id="tab-pedidos" class="tab-pane" style="display:none;">
+      <h5 class="section-title">Mis Pedidos / Seguimiento</h5>
+      <div id="ordersList"></div>
+    </div>
+
+    <!-- TAB FAVORITOS -->
+    <div id="tab-favoritos" class="tab-pane" style="display:none;">
+      <h5 class="section-title">Mis Favoritos</h5>
+      <div class="row g-3" id="favGrid"></div>
+    </div>
+
+    <!-- TAB PERFIL -->
+    <div id="tab-perfil" class="tab-pane" style="display:none;">
+      <h5 class="section-title">Mi Perfil</h5>
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="profile-card">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div style="width:64px;height:64px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;" id="profileAvatar">L</div>
+              <div><h6 class="mb-0 fw-800" id="profileName">Laura Gómez</h6><small class="text-muted">Cliente</small></div>
+            </div>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Nombre completo</label><input type="text" class="form-control" id="prf-nombre" value="Laura Gómez"/></div>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Email</label><input type="email" class="form-control" id="prf-email" value="laura@gmail.com"/></div>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Teléfono</label><input type="text" class="form-control" id="prf-tel" value="300 123 4567"/></div>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Dirección principal</label><input type="text" class="form-control" id="prf-dir" value="Calle 45 # 23-10, Apto 101, Medellín"/></div>
+            <button class="btn-checkout" onclick="saveProfile()"><i class="bi bi-check-circle me-2"></i>Guardar Cambios</button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="profile-card">
+            <h6 class="fw-800 mb-3">Cambiar Contraseña</h6>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Contraseña actual</label><input type="password" class="form-control" id="prf-pass-old" placeholder="••••••••"/></div>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Nueva contraseña</label><input type="password" class="form-control" id="prf-pass-new" placeholder="••••••••"/></div>
+            <div class="mb-3"><label class="form-label fw-bold" style="font-size:.82rem;">Confirmar contraseña</label><input type="password" class="form-control" id="prf-pass-confirm" placeholder="••••••••"/></div>
+            <button class="btn-checkout" onclick="changePassword()"><i class="bi bi-lock me-2"></i>Actualizar Contraseña</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <img id="modal-img" src="" style="width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:16px;"/>
+        <div id="modal-cat" class="text-muted fw-bold mb-1" style="font-size:.75rem;text-transform:uppercase;"></div>
+        <h5 id="modal-name" class="fw-800"></h5>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span id="modal-price" class="fw-800" style="font-size:1.3rem;color:var(--green);"></span>
+          <span id="modal-old" class="text-muted text-decoration-line-through"></span>
+        </div>
+        <p id="modal-desc" class="text-muted" style="font-size:.88rem;"></p>
+        <div class="d-flex gap-2">
+          <button class="btn-checkout flex-grow-1" id="modal-add-btn" onclick="addFromModal()"><i class="bi bi-cart-plus me-2"></i>Agregar al carrito</button>
+          <button class="btn btn-outline-danger" onclick="toggleFavFromModal()" id="modal-fav-btn"><i class="bi bi-heart"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ORDEN DETALLE -->
+<div class="modal fade" id="orderModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-800">Detalle del Pedido</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="orderModalBody"></div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM LOGOUT -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:var(--green);"></i>
+        <h6 class="fw-800 mt-3 mb-2">¿Cerrar sesión?</h6>
+        <p class="text-muted small mb-4">¿Estás seguro de que deseas salir?</p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn flex-grow-1 text-white" style="background:var(--green);" onclick="confirmLogout()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

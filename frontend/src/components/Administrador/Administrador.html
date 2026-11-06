@@ -1,0 +1,267 @@
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="brand">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <div style="width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+        <i class="bi bi-shield-fill-check" style="color:#fff;font-size:1rem;"></i>
+      </div>
+      <div><h5>MiMini</h5><small>Panel Admin</small></div>
+    </div>
+  </div>
+  <div class="py-2 flex-grow-1">
+    <div class="section-label">Principal</div>
+    <a class="nav-link active" onclick="goSection('dashboard',this)"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <div class="section-label">Gestión</div>
+    <a class="nav-link" onclick="goSection('usuarios',this)"><i class="bi bi-people"></i> Gestión de Usuarios</a>
+    <a class="nav-link" onclick="goSection('productos',this)"><i class="bi bi-box-seam"></i> Productos</a>
+    <a class="nav-link" onclick="goSection('pedidos',this)"><i class="bi bi-receipt-cutoff"></i> Pedidos</a>
+    <a class="nav-link" onclick="goSection('asignacion',this)"><i class="bi bi-bicycle"></i> Asignación</a>
+    <a class="nav-link" onclick="goSection('promociones',this)"><i class="bi bi-megaphone"></i> Promociones</a>
+    <div class="section-label">Análisis</div>
+    <a class="nav-link" onclick="goSection('reportes',this)"><i class="bi bi-bar-chart-line"></i> Reportes</a>
+  </div>
+  <div class="p-2 pb-4">
+    <a class="nav-link" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="page-title" id="pageTitle">Dashboard</span>
+    <div class="d-flex align-items-center gap-12 ms-auto" style="gap:14px;">
+      <button class="icon-btn"><i class="bi bi-bell"></i><span class="badge-dot" id="notifBadge">3</span></button>
+      <button class="icon-btn"><i class="bi bi-chat-dots"></i></button>
+    </div>
+    <div class="user-pill">
+      <div class="avatar" id="topbarAvatar">A</div>
+      <span><span id="topbarUserName">Admin</span> <i class="bi bi-chevron-down" style="font-size:.7rem;"></i></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="tab-section active" id="section-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="stat-card green"><div class="icon-wrap" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-currency-dollar"></i></div><div class="label">Ventas del Día</div><div class="value">$1.245.800</div><div class="delta up"><i class="bi bi-arrow-up-short"></i>+12.5% vs ayer</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card"><div class="icon-wrap" style="background:#dbeafe;color:var(--blue);"><i class="bi bi-bag-check"></i></div><div class="label">Pedidos Completados</div><div class="value">48</div><div class="delta up"><i class="bi bi-arrow-up-short"></i>+8.3% vs ayer</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card yellow"><div class="icon-wrap" style="background:#fef9c3;color:#a16207;"><i class="bi bi-hourglass-split"></i></div><div class="label">Pedidos Pendientes</div><div class="value" id="pendientesCount">5</div><div class="delta down"><i class="bi bi-arrow-down-short"></i>-3.2% vs ayer</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card red"><div class="icon-wrap" style="background:#fee2e2;color:var(--red);"><i class="bi bi-person-plus"></i></div><div class="label">Clientes Nuevos</div><div class="value">7</div><div class="delta up"><i class="bi bi-arrow-up-short"></i>+16.7% vs ayer</div></div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="table-card">
+            <div class="table-header"><h6><i class="bi bi-box-seam me-2 text-primary"></i>Productos Recientes</h6><button class="btn-primary-custom btn-sm" onclick="goSection('productos')"><i class="bi bi-eye"></i>Ver todos</button></div>
+            <div class="table-responsive"><table class="table" id="dashProductsTable"></table></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="table-card h-100">
+            <div class="table-header"><h6><i class="bi bi-bar-chart me-2 text-primary"></i>Ventas últimos 7 días</h6></div>
+            <div class="p-3">
+              <div class="mini-chart" id="chart">
+                <div class="bar" style="height:45%;" title="$890.000"></div>
+                <div class="bar" style="height:60%;" title="$1.050.000"></div>
+                <div class="bar" style="height:52%;" title="$920.000"></div>
+                <div class="bar" style="height:78%;" title="$1.180.000"></div>
+                <div class="bar" style="height:65%;" title="$1.100.000"></div>
+                <div class="bar" style="height:88%;" title="$1.420.000"></div>
+                <div class="bar today" style="height:100%;" title="$1.245.800"></div>
+              </div>
+              <div class="chart-labels mt-1"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div>
+              <div class="mt-3 pt-3 border-top">
+                <div class="d-flex justify-content-between mb-1"><small class="text-muted">Mejor día</small><small class="fw-bold">Domingo</small></div>
+                <div class="d-flex justify-content-between"><small class="text-muted">Promedio diario</small><small class="fw-bold">$1.115.114</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="tab-section" id="section-usuarios">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="section-title mb-0">Gestión de Usuarios</h5>
+        <button class="btn-primary-custom" onclick="openUserModal()"><i class="bi bi-plus-lg"></i>Nuevo Usuario</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="search-top"><input type="text" id="userSearch" placeholder="Buscar usuario…" oninput="renderUsers()"/></div>
+          <select class="form-select form-select-sm" style="width:140px;" id="userRolFilter" onchange="renderUsers()">
+            <option value="">Todos los roles</option><option>Cliente</option><option>Empleado</option><option>Repartidor</option>
+          </select>
+        </div>
+        <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="usersTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <div class="tab-section" id="section-productos">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="section-title mb-0">Gestión de Productos</h5>
+        <button class="btn-primary-custom" onclick="openProductModal()"><i class="bi bi-plus-lg"></i>Añadir Producto</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="search-top"><input type="text" id="prodSearch" placeholder="Buscar producto…" oninput="renderProducts()"/></div>
+          <select class="form-select form-select-sm" style="width:150px;" id="prodCatFilter" onchange="renderProducts()">
+            <option value="">Todas las categorías</option><option>Alimentos</option><option>Aseo</option><option>Bebidas</option><option>Lácteos</option><option>Snacks</option>
+          </select>
+        </div>
+        <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Stock</th><th>Precio</th><th>Acciones</th></tr></thead><tbody id="productsTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div class="tab-section" id="section-pedidos">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="section-title mb-0">Gestión de Pedidos</h5>
+        <select class="form-select form-select-sm" style="width:160px;" id="pedidoFilter" onchange="renderPedidos()">
+          <option value="">Todos</option><option>Recibido</option><option>En Preparación</option><option>En Camino</option><option>Entregado</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Cliente</th><th>Dirección</th><th>Items</th><th>Valor</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="pedidosTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ASIGNACION -->
+    <div class="tab-section" id="section-asignacion">
+      <h5 class="section-title mb-3">Asignación de Pedidos a Repartidores</h5>
+      <div class="table-card">
+        <div class="table-header"><h6><i class="bi bi-bicycle me-2 text-primary"></i>Pedidos Pendientes de Asignación</h6></div>
+        <div class="table-responsive"><table class="table"><thead><tr><th>ID Pedido</th><th>Cliente</th><th>Dirección</th><th>Valor</th><th>Asignar Repartidor</th><th>Acción</th></tr></thead><tbody id="asignTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PROMOCIONES -->
+    <div class="tab-section" id="section-promociones">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="section-title mb-0">Gestión de Promociones</h5>
+        <button class="btn-primary-custom" onclick="openPromoModal()"><i class="bi bi-plus-lg"></i>Nueva Promoción</button>
+      </div>
+      <div class="table-card">
+        <div class="table-responsive"><table class="table"><thead><tr><th>Código</th><th>Descripción</th><th>Descuento</th><th>Válido hasta</th><th>Usos</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="promosTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="tab-section" id="section-reportes">
+      <h5 class="section-title mb-4">Reportes y Estadísticas</h5>
+      <div class="row g-4">
+        <div class="col-md-6"><div class="table-card p-4"><h6 class="fw-800 mb-3">Top 5 Productos más Vendidos</h6><div id="topProductsChart"></div></div></div>
+        <div class="col-md-6"><div class="table-card p-4"><h6 class="fw-800 mb-3">Ventas por Categoría</h6><div id="catChart"></div></div></div>
+        <div class="col-12"><div class="table-card p-4"><h6 class="fw-800 mb-3">Resumen del Mes</h6>
+          <div class="row g-3">
+            <div class="col-md-3"><div style="background:#f0fdf4;border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.4rem;font-weight:800;color:var(--green);">$38.4M</div><div style="font-size:.78rem;color:#64748b;font-weight:600;">Ventas Totales</div></div></div>
+            <div class="col-md-3"><div style="background:#eff6ff;border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.4rem;font-weight:800;color:var(--blue);">1.248</div><div style="font-size:.78rem;color:#64748b;font-weight:600;">Pedidos</div></div></div>
+            <div class="col-md-3"><div style="background:#fff7ed;border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.4rem;font-weight:800;color:#ea580c;">$30.800</div><div style="font-size:.78rem;color:#64748b;font-weight:600;">Ticket Promedio</div></div></div>
+            <div class="col-md-3"><div style="background:#fdf4ff;border-radius:10px;padding:16px;text-align:center;"><div style="font-size:1.4rem;font-weight:800;color:#9333ea;">142</div><div style="font-size:.78rem;color:#64748b;font-weight:600;">Clientes Nuevos</div></div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0"><h5 class="modal-title fw-800" id="userModalTitle">Nuevo Usuario</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label fw-bold">Nombre completo *</label><input type="text" class="form-control" id="u-nombre"/></div>
+        <div class="mb-3"><label class="form-label fw-bold">Email *</label><input type="email" class="form-control" id="u-email"/></div>
+        <div class="mb-3"><label class="form-label fw-bold">Rol *</label><select class="form-select" id="u-rol"><option>Cliente</option><option>Empleado</option><option>Repartidor</option></select></div>
+        <div class="mb-3"><label class="form-label fw-bold">Teléfono</label><input type="text" class="form-control" id="u-tel"/></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn text-white fw-bold" style="background:var(--blue);border-radius:8px;" onclick="saveUser()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0"><h5 class="modal-title fw-800" id="prodModalTitle">Nuevo Producto</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label fw-bold">Nombre *</label><input type="text" class="form-control" id="p-nombre"/></div>
+          <div class="col-md-6"><label class="form-label fw-bold">Categoría *</label><select class="form-select" id="p-cat"><option>Alimentos</option><option>Aseo</option><option>Bebidas</option><option>Lácteos</option><option>Snacks</option></select></div>
+          <div class="col-md-6"><label class="form-label fw-bold">Precio *</label><input type="number" class="form-control" id="p-precio" min="0"/></div>
+          <div class="col-md-6"><label class="form-label fw-bold">Precio antes (opcional)</label><input type="number" class="form-control" id="p-old-precio" min="0"/></div>
+          <div class="col-md-6"><label class="form-label fw-bold">Stock inicial *</label><input type="number" class="form-control" id="p-stock" min="0" value="0"/></div>
+          <div class="col-12"><label class="form-label fw-bold">Descripción</label><textarea class="form-control" id="p-desc" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn text-white fw-bold" style="background:var(--blue);border-radius:8px;" onclick="saveProduct()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROMOCION -->
+<div class="modal fade" id="promoModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0"><h5 class="modal-title fw-800">Nueva Promoción</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label fw-bold">Código *</label><input type="text" class="form-control" id="promo-code" placeholder="Ej: VERANO20"/></div>
+        <div class="mb-3"><label class="form-label fw-bold">Descripción *</label><input type="text" class="form-control" id="promo-desc" placeholder="Descripción de la promoción"/></div>
+        <div class="row g-3 mb-3">
+          <div class="col-6"><label class="form-label fw-bold">Descuento % *</label><input type="number" class="form-control" id="promo-pct" min="1" max="100" value="10"/></div>
+          <div class="col-6"><label class="form-label fw-bold">Válido hasta *</label><input type="date" class="form-control" id="promo-date"/></div>
+        </div>
+        <div class="mb-3"><label class="form-label fw-bold">Límite de usos</label><input type="number" class="form-control" id="promo-uses" value="100" min="1"/></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn text-white fw-bold" style="background:var(--blue);border-radius:8px;" onclick="savePromo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;color:#f59e0b;"></i>
+        <h6 class="fw-800 mt-3 mb-2">¿Eliminar este registro?</h6>
+        <p class="text-muted small mb-4" id="deleteMsg">Esta acción no se puede deshacer.</p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger flex-grow-1" id="confirmDeleteBtn">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT CONFIRM -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:var(--blue);"></i>
+        <h6 class="fw-800 mt-3 mb-4">¿Cerrar sesión?</h6>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn flex-grow-1 text-white fw-bold" style="background:var(--blue);" onclick="confirmLogout()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

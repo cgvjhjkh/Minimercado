@@ -1,0 +1,265 @@
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="brand">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <div style="width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+        <i class="bi bi-person-workspace" style="color:#fff;font-size:1rem;"></i>
+      </div>
+      <div><h5>MiMini</h5><small>Panel Empleado</small></div>
+    </div>
+  </div>
+  <div class="py-3 flex-grow-1">
+    <a class="nav-link active" onclick="goSection('operaciones',this)"><i class="bi bi-house-fill"></i> Inicio</a>
+    <a class="nav-link" onclick="goSection('inventario',this)"><i class="bi bi-box-seam"></i> Inventario</a>
+    <a class="nav-link" onclick="goSection('picking',this)"><i class="bi bi-clipboard-check"></i> Picking List</a>
+    <a class="nav-link" onclick="goSection('danos',this)"><i class="bi bi-exclamation-triangle"></i> Productos Dañados</a>
+    <a class="nav-link" onclick="goSection('historial',this)"><i class="bi bi-clock-history"></i> Historial</a>
+  </div>
+  <div class="p-2 pb-4">
+    <a class="nav-link" onclick="handleLogout()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="page-title" id="pageTitle"><i class="bi bi-boxes me-2" style="color:var(--purple);"></i>Inventario y Logística</span>
+    <div class="d-flex align-items-center gap-12 ms-auto" style="gap:14px;">
+      <button class="icon-btn"><i class="bi bi-bell"></i><span class="badge-dot">2</span></button>
+      <button class="icon-btn"><i class="bi bi-chat-dots"></i></button>
+    </div>
+    <div class="user-pill">
+      <div class="avatar" id="topbarAvatar">E</div>
+      <span><span id="topbarUserName">Empleado</span> <i class="bi bi-chevron-down" style="font-size:.7rem;"></i></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SECCIÓN OPERACIONES (INICIO) -->
+    <div class="tab-section active" id="section-operaciones">
+      <div class="row g-4 mb-4">
+        <!-- KPIs rápidos -->
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid var(--purple);padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Productos en Stock</div><div style="font-size:1.4rem;font-weight:800;color:var(--purple);" id="kpi-stock">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid #f59e0b;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Stock Bajo</div><div style="font-size:1.4rem;font-weight:800;color:#d97706;" id="kpi-bajo">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid #16a34a;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Pedidos Pendientes</div><div style="font-size:1.4rem;font-weight:800;color:#16a34a;" id="kpi-pedidos">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid #dc2626;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Reportes Daño Hoy</div><div style="font-size:1.4rem;font-weight:800;color:#dc2626;" id="kpi-danos">--</div></div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="panel-card mb-4">
+            <div class="panel-header"><h6><i class="bi bi-boxes me-2"></i>Registrar Entrada de Mercancía</h6></div>
+            <div class="panel-body">
+              <div class="field-group">
+                <label>Buscar producto</label>
+                <div class="search-wrap">
+                  <i class="bi bi-search"></i>
+                  <input type="text" class="form-control" id="buscar-prod" placeholder="Buscar por nombre o código…" oninput="buscarProducto()"/>
+                </div>
+                <div id="buscar-results" style="display:none;border:1px solid #ede9fe;border-radius:8px;margin-top:4px;background:#fff;max-height:160px;overflow-y:auto;"></div>
+              </div>
+              <div class="row g-2">
+                <div class="col-8">
+                  <div class="field-group">
+                    <label>Seleccionar Producto</label>
+                    <select class="form-select" id="entrada-prod">
+                      <option value="">Seleccionar producto…</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="field-group">
+                    <label>Cantidad</label>
+                    <div class="num-group">
+                      <button onclick="cambiarNum('entrada-qty',-1)">-</button>
+                      <input type="number" id="entrada-qty" value="1" min="1"/>
+                      <button onclick="cambiarNum('entrada-qty',1)">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="field-group">
+                    <label>Ubicación en Góndola</label>
+                    <select class="form-select" id="entrada-ubic">
+                      <option value="">Seleccionar…</option>
+                      <option>Pasillo A - Estante 1</option>
+                      <option>Pasillo A - Estante 2</option>
+                      <option>Pasillo B - Estante 1</option>
+                      <option>Pasillo B - Estante 3</option>
+                      <option>Refrigeración - Zona A</option>
+                      <option>Refrigeración - Zona B</option>
+                      <option>Depósito Central</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-12"><button class="btn-purple" onclick="registrarEntrada()"><i class="bi bi-plus-circle"></i>Registrar Entrada</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="panel-card">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0"><i class="bi bi-clipboard-list me-2"></i>Picking List – Pedidos Activos</h6>
+              <select class="form-select form-select-sm" style="width:auto;border-radius:6px;font-size:.78rem;border:none;background:rgba(255,255,255,.2);color:#fff;" id="pickingSelect" onchange="renderPicking()">
+              </select>
+            </div>
+            <div class="panel-body" id="pickingBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN INVENTARIO -->
+    <div class="tab-section" id="section-inventario">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 style="font-size:.95rem;font-weight:800;color:#1e1b4b;">Estado del Inventario</h5>
+        <div class="d-flex gap-2">
+          <input type="text" id="inv-search" class="form-control form-control-sm" placeholder="Buscar…" style="border-radius:8px;width:200px;" oninput="renderInventario()"/>
+          <select class="form-select form-select-sm" id="inv-cat" style="width:150px;" onchange="renderInventario()">
+            <option value="">Todas las categorías</option>
+            <option>Alimentos</option><option>Aseo</option><option>Bebidas</option><option>Lácteos</option><option>Snacks</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-card inventory-table">
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock</th><th>Ubicación</th><th>Estado</th><th>Ajustar Stock</th></tr></thead>
+            <tbody id="inventarioTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN PICKING (standalone) -->
+    <div class="tab-section" id="section-picking">
+      <h5 style="font-size:.95rem;font-weight:800;color:#1e1b4b;margin-bottom:16px;">Preparación de Pedidos</h5>
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="panel-card">
+            <div class="panel-header"><h6><i class="bi bi-receipt me-2"></i>Pedidos Asignados</h6></div>
+            <div class="panel-body p-0">
+              <div id="pedidosLista" style="max-height:500px;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="panel-card">
+            <div class="panel-header"><h6><i class="bi bi-clipboard-check me-2"></i>Detalle del Pedido</h6></div>
+            <div class="panel-body" id="pickingDetalle"><div class="text-center py-5 text-muted"><i class="bi bi-hand-index-thumb fs-2 d-block mb-2"></i>Selecciona un pedido de la lista</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DAÑOS -->
+    <div class="tab-section" id="section-danos">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="panel-card">
+            <div class="panel-header"><h6><i class="bi bi-exclamation-triangle me-2"></i>Reportar Producto Dañado</h6></div>
+            <div class="panel-body">
+              <div class="row g-2">
+                <div class="col-8">
+                  <div class="field-group">
+                    <label>Producto Dañado *</label>
+                    <select class="form-select" id="dano-prod"><option value="">Seleccionar…</option></select>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="field-group">
+                    <label>Cantidad</label>
+                    <div class="num-group">
+                      <button onclick="cambiarNum('dano-qty',-1)">-</button>
+                      <input type="number" id="dano-qty" value="1" min="1"/>
+                      <button onclick="cambiarNum('dano-qty',1)">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="field-group">
+                    <label>Motivo del Daño *</label>
+                    <select class="form-select" id="dano-motivo">
+                      <option value="">Seleccionar motivo…</option>
+                      <option>Producto vencido</option>
+                      <option>Daño físico en embalaje</option>
+                      <option>Derrame / contaminación</option>
+                      <option>Error de almacenamiento</option>
+                      <option>Daño en transporte</option>
+                      <option>Plagas / infestación</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="field-group">
+                    <label>Observaciones (opcional)</label>
+                    <textarea class="form-control" id="dano-obs" rows="2" placeholder="Describe el daño encontrado…" style="border-radius:8px;border:1.5px solid #ddd6fe;font-size:.88rem;"></textarea>
+                  </div>
+                </div>
+                <div class="col-12"><button class="btn-red" onclick="reportarDano()"><i class="bi bi-exclamation-triangle"></i>Reportar Daño</button></div>
+              </div>
+              <div class="note-box mt-3"><i class="bi bi-info-circle-fill" style="flex-shrink:0;"></i>Esta acción descontará automáticamente el inventario general.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="panel-card">
+            <div class="panel-header"><h6><i class="bi bi-journal-text me-2"></i>Historial de Reportes de Daño</h6></div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead><tr><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Producto</th><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Cant.</th><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Motivo</th><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Fecha</th></tr></thead>
+                <tbody id="danosHistorial"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="tab-section" id="section-historial">
+      <h5 style="font-size:.95rem;font-weight:800;color:#1e1b4b;margin-bottom:16px;">Historial de Actividad</h5>
+      <div class="panel-card">
+        <div class="panel-body" id="historialLista" style="max-height:500px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL AJUSTE STOCK -->
+<div class="modal fade" id="ajusteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0"><h5 class="modal-title fw-800" id="ajusteTitle">Ajustar Stock</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <p id="ajusteDesc" class="text-muted mb-3" style="font-size:.85rem;"></p>
+        <label class="fw-bold mb-2" style="font-size:.82rem;">Nuevo Stock *</label>
+        <input type="number" class="form-control" id="ajusteValor" min="0"/>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn text-white fw-bold" style="background:var(--purple);border-radius:8px;" onclick="guardarAjuste()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:var(--purple);"></i>
+        <h6 class="fw-800 mt-3 mb-4">¿Cerrar sesión?</h6>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn flex-grow-1 text-white fw-bold" style="background:var(--purple);" onclick="confirmLogout()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

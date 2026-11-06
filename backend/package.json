@@ -1,0 +1,32 @@
+{
+  "name": "rastreo-api",
+  "version": "1.0.0",
+  "description": "API para sistema de rastreo en tiempo real",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^4.22.3",
+    "mysql2": "^3.22.5",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cgvjhjkh/Minimercado.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cgvjhjkh/Minimercado/issues"
+  },
+  "homepage": "https://github.com/cgvjhjkh/Minimercado#readme"
+}
