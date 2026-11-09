@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiMini · Monitor en tiempo real</title>
+
+  <!-- GUARDIA DE SESIÓN (permite monitoreo con ?id_repartidor=) -->
+  <script>
+    (function () {
+      const PAGINA_POR_ROL = {
+        cliente: 'cliente.html',
+        empleado: 'empleado.html',
+        admin: 'administrador.html',
+        administrador: 'administrador.html',
+        repartidor: 'repartidor.html'
+      };
+      let usuario = null;
+      try { usuario = JSON.parse(localStorage.getItem('usuario')); } catch (e) { usuario = null; }
+      const params = new URLSearchParams(location.search);
+      const idParam = params.get('id_repartidor');
+      if (!usuario && !idParam) {
+        window.location.replace('index.html');
+        return;
+      }
+      if (usuario && usuario.rol !== 'repartidor' && usuario.rol !== 'administrador' && usuario.rol !== 'admin') {
+        window.location.replace(PAGINA_POR_ROL[usuario.rol] || 'index.html');
+        return;
+      }
+      window.usuarioActual = usuario;
+    })();
+  </script>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="mapa.css" />
+</head>
+<body>
+
+  <div id="map" aria-label="Mapa de seguimiento en tiempo real"></div>
+
+  <!-- ================= CABECERA ================= -->
+  <header class="topbar glass">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <div>
+        <strong>MiMini</strong>
+        <small>Monitor de entregas</small>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="driver-chip" id="driverChip">
+        <span class="avatar" id="driverAvatar">R</span>
+        <div>
+          <span class="driver-name" id="driverName">Cargando repartidor…</span>
+          <span class="driver-sub" id="driverSub">—</span>
+        </div>
+      </div>
+      <span class="pill" id="disponibilidadPill">—</span>
+    </div>
+
+    <div class="topbar-right">
+      <span class="conn" id="connStatus"><i></i> Conectando…</span>
+      <a class="btn ghost" href="repartidor.html" title="Volver al panel">Panel</a>
+    </div>
+  </header>
+
+  <!-- ================= PANEL IZQUIERDO ================= -->
+  <aside class="sidebar glass" id="sidebar">
+    <div class="sidebar-head">
+      <h2>Pedidos activos</h2>
+      <button class="icon-btn" id="btnRefresh" title="Actualizar pedidos" aria-label="Actualizar pedidos">⟳</button>
+    </div>
+
+    <div class="order-list" id="orderList">
+      <div class="empty-state">
+        <span class="empty-icon">📦</span>
+        <p>Cargando pedidos…</p>
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="stat">
+        <span>Activos</span>
+        <strong id="statActivos">0</strong>
+      </div>
+      <div class="stat">
+        <span>Entregados hoy</span>
+        <strong id="statEntregados">0</strong>
+      </div>
+      <div class="stat">
+        <span>Recaudado hoy</span>
+        <strong id="statRecaudado">$0</strong>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= PANEL DE DESTINO ================= -->
+  <section class="destination glass" id="destinationPanel">
+    <div class="destination-head">
+      <span class="eyebrow">Destino del pedido</span>
+      <span class="state-badge" id="pedidoEstado">Sin pedido</span>
+    </div>
+
+    <div class="destination-body">
+      <div class="dest-icon">📍</div>
+      <div class="dest-text">
+        <strong id="destDireccion">Selecciona un pedido</strong>
+        <small id="destCliente">—</small>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <span>Distancia</span>
+        <strong id="metricDistancia">—</strong>
+      </div>
+      <div class="metric">
+        <span>Tiempo</span>
+        <strong id="metricTiempo">—</strong>
+      </div>
+      <div class="metric">
+        <span>Pedido</span>
+        <strong id="metricPedido">—</strong>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="btnEnCamino" disabled>En camino</button>
+      <button class="btn success" id="btnEntregado" disabled>Entregado</button>
+      <button class="btn ghost" id="btnVerRuta" disabled>Ver ruta</button>
+      <button class="btn ghost" id="btnCentrar" title="Centrar en mi ubicación">Centrar</button>
+    </div>
+  </section>
+
+  <!-- ================= PIE ================= -->
+  <footer class="statusbar glass">
+    <div class="status-item">
+      <span class="dot-live" id="gpsDot"></span>
+      <span id="gpsStatus">GPS sin iniciar</span>
+    </div>
+    <div class="status-item" id="lastUpdate">Última actualización: --:--:--</div>
+    <div class="status-item" id="routeStatus">Ruta: —</div>
+  </footer>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="mapa.js"></script>
+</body>
+</html>

@@ -4,12 +4,30 @@
 const PAGINA_POR_ROL = {
     cliente: 'cliente.html',
     empleado: 'empleado.html',
+    administrador: 'administrador.html',
     admin: 'administrador.html',
     repartidor: 'repartidor.html'
 };
 
+function normalizarRol(rol) {
+    const valor = String(rol || '').trim().toLowerCase();
+    return valor === 'admin' ? 'administrador' : valor;
+}
+
 function redirigirPorRol(rol) {
-    return PAGINA_POR_ROL[rol] || 'index.html';
+    return PAGINA_POR_ROL[normalizarRol(rol)] || 'index.html';
+}
+
+function guardarSesion(usuario) {
+    if (!usuario) return;
+    usuario.rol = normalizarRol(usuario.rol);
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+
+    if (usuario.rol === 'repartidor' && usuario.id_repartidor) {
+        localStorage.setItem('id_repartidor', String(usuario.id_repartidor));
+    } else if (usuario.rol !== 'repartidor') {
+        localStorage.removeItem('id_repartidor');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -102,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.success) {
                     showAlert('✅ ¡Bienvenido ' + data.usuario.nombre_completo + '!', 'success');
-                    localStorage.setItem('usuario', JSON.stringify(data.usuario));
+                    guardarSesion(data.usuario);
                     const modal = bootstrap.Modal.getInstance(document.getElementById('loginmodal'));
                     if (modal) modal.hide();
                     setTimeout(() => {
@@ -143,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.success) {
                     showAlert('✅ ¡Bienvenido ' + data.usuario.nombre_completo + '!', 'success');
-                    localStorage.setItem('usuario', JSON.stringify(data.usuario));
+                    guardarSesion(data.usuario);
                     setTimeout(() => {
                         window.location.href = redirigirPorRol(data.usuario.rol);
                     }, 1500);
@@ -263,12 +281,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (usuario && cuentaBtn) {
             try {
                 const user = JSON.parse(usuario);
+                user.rol = normalizarRol(user.rol);
                 cuentaBtn.innerHTML = `
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
                     </svg>
-                    ${user.nombre_completo.split(' ')[0]}
+                    ${String(user.nombre_completo || 'Mi cuenta').split(' ')[0]}
                 `;
                 cuentaBtn.removeAttribute('data-bs-target');
                 cuentaBtn.removeAttribute('data-bs-toggle');
@@ -276,6 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
                     if (confirm('¿Cerrar sesión?')) {
                         localStorage.removeItem('usuario');
+                        localStorage.removeItem('id_repartidor');
                         window.location.href = 'index.html';
                     }
                 };

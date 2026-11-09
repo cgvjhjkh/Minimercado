@@ -352,7 +352,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // ============ DATA ============
-const PRODUCTS = [
+// Catálogo base (respaldo). Se sobrescribe con la base de datos cuando la API está disponible.
+let PRODUCTS = [
   {id:1,name:"Arroz Premium 1kg",cat:"Alimentos",price:3200,oldPrice:4000,discount:20,img:"https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80",desc:"Arroz de grano largo de alta calidad, ideal para toda ocasión."},
   {id:2,name:"Aceite de Girasol 900ml",cat:"Alimentos",price:6500,oldPrice:8000,discount:18,img:"https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80",desc:"Aceite vegetal puro de girasol, bajo en grasas saturadas."},
   {id:3,name:"Pasta Espagueti 500g",cat:"Alimentos",price:2000,oldPrice:null,discount:0,img:"https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400&q=80",desc:"Pasta de trigo duro de primera calidad, cocción perfecta en 8 minutos."},
@@ -407,10 +408,57 @@ function showToast(msg, type='success') {
   setTimeout(() => { const t = document.getElementById(id); if(t) t.remove(); }, 3500);
 }
 
+// ============ CARGA DE PRODUCTOS DESDE BD ============
+const IMG_FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="16" fill="%23e8f5ee"/><text x="100" y="112" text-anchor="middle" font-size="70" fill="%231a7a3e">🛒</text></svg>');
+function catLabelDeRow(row) {
+  return (row.categoria_nombre || row.nombre_categoria || row.cat || 'Otros').toString().trim() || 'Otros';
+}
+function normalizarProductoDB(row) {
+  const precio = Number(row.precio_venta ?? row.precio ?? 0) || 0;
+  return {
+    id: Number(row.id_producto ?? row.id ?? 0),
+    name: (row.nombre || row.name || 'Producto').toString(),
+    cat: catLabelDeRow(row),
+    price: precio,
+    oldPrice: null,
+    discount: 0,
+    img: IMG_FALLBACK,
+    desc: (row.descripcion || row.desc || '').toString() || 'Producto del minimercado.'
+  };
+}
+function renderFilterPills() {
+  const cont = document.getElementById('filterPills');
+  if (!cont) return;
+  const cats = Array.from(new Set(PRODUCTS.map(p => p.cat))).sort((a,b) => a.localeCompare(b, 'es'));
+  const pills = ['Todas', 'Ofertas', ...cats];
+  cont.innerHTML = pills.map((c, i) => `<button class="btn${c === currentFilter ? ' active' : ''}" onclick="filterCat(${JSON.stringify(c).replace(/"/g, '&quot;')},this)">${c}</button>`).join('');
+}
+async function cargarProductosBD() {
+  try {
+    const res = await fetch('/api/productos', { headers: { 'Accept': 'application/json' } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) throw new Error(data.error || ('Error ' + res.status));
+    const rows = Array.isArray(data.data) ? data.data : [];
+    if (rows.length) {
+      PRODUCTS = rows.map(normalizarProductoDB);
+      // Si el filtro actual ya no existe en la BD, volver a "Todas"
+      const cats = new Set(PRODUCTS.map(p => p.cat));
+      if (currentFilter !== 'Todas' && currentFilter !== 'Ofertas' && !cats.has(currentFilter)) currentFilter = 'Todas';
+      cart = [];
+      favorites = [];
+      updateCartUI();
+      renderFilterPills();
+    }
+  } catch (e) {
+    console.warn('No se pudieron cargar productos desde la BD; usando respaldo local.', e);
+  }
+  renderProducts();
+}
+
 // ============ PRODUCTS ============
 function getFiltered() {
   let list = [...PRODUCTS];
-  const q = document.getElementById('searchInput').value.toLowerCase();
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
   if(q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q));
   if(currentFilter === 'Ofertas') list = list.filter(p => p.discount > 0);
   else if(currentFilter !== 'Todas') list = list.filter(p => p.cat === currentFilter);
@@ -425,14 +473,14 @@ function renderProducts() {
   const g = document.getElementById('productsGrid');
   if(!list.length) { g.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="bi bi-search fs-1 d-block mb-2"></i>No se encontraron productos</div>'; return; }
   g.innerHTML = list.map(p => {
-    const inCart = cart.some(c => c.id === p.id);
+    const inCart = cart.some(c => String(c.id) === String(p.id));
     const inFav = favorites.includes(p.id);
     return `<div class="col-6 col-md-4 col-lg-3 col-xl-2">
       <div class="product-card" onclick="openProduct(${p.id})" style="cursor:pointer;">
         <div class="img-wrap">
-          <img src="${p.img}" alt="${p.name}" loading="lazy"/>
+          <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='${IMG_FALLBACK}'"/>
           ${p.discount ? `<span class="badge-discount">-${p.discount}%</span>` : ''}
-          <button class="fav-btn ${inFav?'active':''}" onclick="event.stopPropagation();toggleFav(${p.id})" id="fav-${p.id}"><i class="bi bi-heart${inFav?'-fill':''}"></i></button>
+          <button type="button" class="fav-btn ${inFav?'active':''}" onclick="event.stopPropagation();toggleFav(${p.id})" id="fav-${p.id}"><i class="bi bi-heart${inFav?'-fill':''}"></i></button>
         </div>
         <div class="card-body">
           <div class="cat">${p.cat}</div>
@@ -441,7 +489,7 @@ function renderProducts() {
             <span class="price">$${p.price.toLocaleString('es-CO')}</span>
             ${p.oldPrice ? `<span class="old-price">$${p.oldPrice.toLocaleString('es-CO')}</span>` : ''}
           </div>
-          <button class="btn-add ${inCart?'added':''}" onclick="event.stopPropagation();addToCart(${p.id})" id="btn-${p.id}">
+          <button type="button" class="btn-add ${inCart?'added':''}" onclick="event.stopPropagation();addToCart(${p.id})" id="btn-${p.id}">
             ${inCart ? '<i class="bi bi-check me-1"></i>En carrito' : '<i class="bi bi-cart-plus me-1"></i>Agregar'}
           </button>
         </div>
@@ -473,9 +521,10 @@ function addToCart(id) {
 
 function updateCartUI() {
   const total = cart.reduce((s,i) => s + i.qty, 0);
-  document.getElementById('cartBadge').textContent = total;
-  document.getElementById('cartCount').textContent = total;
-  document.getElementById('tab-carrito-btn').textContent = `Mi Carrito (${total})`;
+  const badge = document.getElementById('cartBadge');
+  if (badge) badge.textContent = total;
+  const btn = document.getElementById('tab-carrito-btn');
+  if (btn) btn.innerHTML = `Mi Carrito (${total})`;
 }
 
 function removeFromCart(id) {
@@ -634,13 +683,13 @@ function renderFavorites() {
       <div class="img-wrap">
         <img src="${p.img}" alt="${p.name}" loading="lazy"/>
         ${p.discount ? `<span class="badge-discount">-${p.discount}%</span>` : ''}
-        <button class="fav-btn active" onclick="event.stopPropagation();toggleFav(${p.id})"><i class="bi bi-heart-fill"></i></button>
+        <button type="button" class="fav-btn active" onclick="event.stopPropagation();toggleFav(${p.id})"><i class="bi bi-heart-fill"></i></button>
       </div>
       <div class="card-body">
         <div class="cat">${p.cat}</div>
         <div class="name">${p.name}</div>
         <div class="price-wrap"><span class="price">$${p.price.toLocaleString('es-CO')}</span></div>
-        <button class="btn-add" onclick="event.stopPropagation();addToCart(${p.id})"><i class="bi bi-cart-plus me-1"></i>Agregar</button>
+        <button type="button" class="btn-add" onclick="event.stopPropagation();addToCart(${p.id})"><i class="bi bi-cart-plus me-1"></i>Agregar</button>
       </div>
     </div>
   </div>`).join('');
@@ -726,7 +775,7 @@ function aplicarSesionUsuario() {
 
 // ============ INIT ============
 aplicarSesionUsuario();
-renderProducts();
+cargarProductosBD();
 </script>
 </body>
 </html>
