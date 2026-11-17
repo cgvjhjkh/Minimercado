@@ -1,0 +1,350 @@
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- HEADER -->
+<div class="page-header">
+  <h4><i class="bi bi-bicycle me-2"></i>Repartidor – Módulo de Entregas</h4>
+  <p>Interactúa con los teléfonos para simular el flujo completo</p>
+</div>
+
+<!-- PANEL DE CONTROL DESKTOP -->
+<div class="control-panel">
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Estado</h6><div class="cp-val" id="cp-estado">Disponible</div><div class="cp-sub" id="cp-estado-sub">Listo para recibir</div></div></div>
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Pedidos Asignados</h6><div class="cp-val" id="cp-pedidos">3</div><div class="cp-sub">En cola</div></div></div>
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Entregas Hoy</h6><div class="cp-val" id="cp-entregas">0</div><div class="cp-sub">Completadas</div></div></div>
+    <div class="col-6 col-md-3"><div class="cp-card"><h6>Ganancia Hoy</h6><div class="cp-val" id="cp-ganancia">$0</div><div class="cp-sub">Comisión 8%</div></div></div>
+  </div>
+</div>
+
+<!-- 4 PHONES -->
+<div class="phones-grid">
+
+  <!-- PHONE 1: INICIO -->
+  <div class="phone-wrap">
+    <span class="phone-step-label">1 · Inicio</span>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span class="time" id="clock1">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+        <div class="app-topbar">
+          <button class="menu-btn" onclick="openMenu()"><i class="bi bi-list"></i></button>
+          <span class="app-title">MiMini</span>
+          <div class="avatar-sm" id="topbarAvatarR">R</div>
+        </div>
+        <!-- TOGGLE DISPONIBILIDAD -->
+        <div class="toggle-bar">
+          <div>
+            <div class="label">Disponible para recibir pedidos</div>
+            <div class="sublabel" id="toggleLabel">Estado: En línea</div>
+          </div>
+          <div class="big-toggle on" id="availToggle" onclick="toggleAvailability()"></div>
+        </div>
+        <!-- PEDIDOS -->
+        <div class="orders-section">
+          <h6>Pedidos Asignados</h6>
+          <div id="ordersList"></div>
+        </div>
+        <div class="bottom-nav">
+          <a class="active"><i class="bi bi-house-fill"></i>Inicio</a>
+          <a onclick="showScreen('historial')"><i class="bi bi-clock-history"></i>Historial</a>
+          <a onclick="showScreen('perfil')"><i class="bi bi-person"></i>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHONE 2: RUTA ACTIVA -->
+  <div class="phone-wrap">
+    <span class="phone-step-label">2 · Ruta Activa</span>
+    <div class="phone-frame">
+      <div class="phone-screen" id="screen-ruta">
+        <div class="status-bar"><span class="time">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+        <div class="app-topbar">
+          <button class="menu-btn" onclick="backToInicio()"><i class="bi bi-arrow-left"></i></button>
+          <span class="app-title">Ruta Activa</span>
+          <div style="width:30px;"></div>
+        </div>
+        <!-- ORDER ACTIVE CARD -->
+        <div style="padding:0 16px 12px;">
+          <div class="order-card-delivery active-order" style="cursor:default;">
+            <div style="font-weight:800;font-size:.88rem;" id="ruta-orderId">Pedido #1058</div>
+            <div style="font-size:.8rem;color:#64748b;" id="ruta-client">María López</div>
+            <div style="font-size:.75rem;color:#94a3b8;" id="ruta-dir">Calle 10 # 45-23</div>
+          </div>
+        </div>
+        <!-- MAP -->
+        <div class="map-placeholder">
+          <div class="map-route" id="mapRoute" style="transition:width 2s;"></div>
+          <div class="map-pin origin"><i class="bi bi-shop-window"></i></div>
+          <div class="map-pin dest"><i class="bi bi-geo-alt-fill"></i></div>
+          <div id="mapLabel" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:.62rem;font-weight:700;border-radius:20px;padding:2px 10px;">MiMini → Destino</div>
+          <!-- PROGRESS BAR ON MAP -->
+          <div id="routeProgress" style="position:absolute;bottom:0;left:0;height:4px;background:var(--green);width:0%;transition:width 0.5s;"></div>
+        </div>
+        <!-- ROUTE INFO -->
+        <div class="route-info-bar">
+          <div><div class="ri-label">Distancia</div><div class="ri-val" id="ruta-dist">3.2 km</div></div>
+          <div><div class="ri-label">Tiempo est.</div><div class="ri-val" id="ruta-tiempo">12 min</div></div>
+          <div class="ms-auto"><div class="ri-label">Total</div><div class="ri-val" style="color:var(--green);" id="ruta-valor">$25.600</div></div>
+        </div>
+        <!-- ACTIONS -->
+        <div style="padding:12px 16px;display:flex;gap:10px;">
+          <button class="action-btn call" onclick="callClient()"><i class="bi bi-telephone-fill"></i>Llamar</button>
+          <button class="action-btn chat-btn" onclick="showScreen('chat')"><i class="bi bi-chat-dots-fill"></i>Chat</button>
+          <button class="action-btn" style="background:#fef3c7;color:#d97706;" onclick="reportarProblema()"><i class="bi bi-exclamation-triangle-fill"></i>Problema</button>
+        </div>
+        <!-- ESTADO BUTTON -->
+        <div style="padding:0 16px 14px;">
+          <div id="statusBtnArea">
+            <button class="btn-enroute" style="width:100%;margin:0;" id="enrouteBtn" onclick="marcarEnCamino()">
+              <i class="bi bi-truck me-2"></i>Marcar como "En Camino"
+            </button>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <a onclick="backToInicio()"><i class="bi bi-house-fill"></i>Inicio</a>
+          <a><i class="bi bi-clock-history"></i>Historial</a>
+          <a><i class="bi bi-person"></i>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHONE 3: CONFIRMACIÓN -->
+  <div class="phone-wrap">
+    <span class="phone-step-label">3 · Confirmar Entrega</span>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span class="time">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+        <div class="app-topbar">
+          <button class="menu-btn" onclick="backToRuta()"><i class="bi bi-arrow-left"></i></button>
+          <span class="app-title">Confirmar Entrega</span>
+          <div style="width:30px;"></div>
+        </div>
+        <div style="padding:0 16px 12px;">
+          <div class="order-card-delivery active-order" style="cursor:default;">
+            <div style="font-weight:800;font-size:.88rem;" id="conf-orderId">Pedido #1058 · María López</div>
+            <div style="font-size:.75rem;color:#94a3b8;" id="conf-dir">Calle 10 # 45-23</div>
+          </div>
+        </div>
+        <!-- FIRMA -->
+        <div style="padding:0 16px 4px;"><small style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Firma Digital del Cliente *</small></div>
+        <div class="signature-area" id="signatureArea">
+          <canvas id="signCanvas"></canvas>
+          <div class="sig-placeholder" id="sigPlaceholder"><i class="bi bi-pen" style="font-size:1.6rem;color:#cbd5e1;"></i><span>Firma aquí</span></div>
+        </div>
+        <div style="padding:0 16px;margin-bottom:8px;display:flex;gap:8px;">
+          <button style="flex:1;background:#f5f3ff;border:none;border-radius:8px;padding:5px;font-size:.72rem;font-weight:700;color:#7c3aed;cursor:pointer;" onclick="clearSignature()"><i class="bi bi-eraser me-1"></i>Limpiar</button>
+          <div id="sigStatus" style="font-size:.72rem;color:#94a3b8;display:flex;align-items:center;padding:0 8px;"></div>
+        </div>
+        <!-- FOTO EVIDENCIA -->
+        <div style="padding:0 16px 4px;"><small style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">Evidencia de Entrega (Foto)</small></div>
+        <div class="photo-area" id="photoArea" onclick="tomarFoto()">
+          <i class="bi bi-camera" style="font-size:1.6rem;"></i>
+          <span id="photoLabel">Tomar Foto</span>
+        </div>
+        <!-- CONFIRMAR -->
+        <div style="padding:0 16px 14px;">
+          <button style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:800;box-shadow:0 4px 12px rgba(21,128,61,.3);cursor:pointer;" onclick="confirmarEntrega()">
+            <i class="bi bi-check-circle me-2"></i>Confirmar Entrega
+          </button>
+        </div>
+        <div class="bottom-nav">
+          <a onclick="backToRuta()"><i class="bi bi-house-fill"></i>Inicio</a>
+          <a><i class="bi bi-clock-history"></i>Historial</a>
+          <a><i class="bi bi-person"></i>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHONE 4: COMPLETADO / HISTORIAL / PERFIL / CHAT -->
+  <div class="phone-wrap">
+    <span class="phone-step-label" id="phone4Label">4 · Pedido Completado</span>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="status-bar"><span class="time">9:41</span><div class="icons"><i class="bi bi-wifi"></i><i class="bi bi-reception-4"></i><i class="bi bi-battery-full"></i></div></div>
+
+        <!-- SCREEN: COMPLETADO -->
+        <div id="screen-completado" style="display:flex;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <div style="width:30px;"></div>
+            <span class="app-title">Pedido Completado</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div class="success-screen">
+            <div class="success-circle"><i class="bi bi-check-lg"></i></div>
+            <div style="font-size:1.1rem;font-weight:800;color:#0f172a;margin-bottom:6px;">¡Entrega Confirmada!</div>
+            <div style="font-size:.85rem;color:#64748b;margin-bottom:16px;line-height:1.5;">El pedido fue entregado exitosamente.</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--green);" id="done-valor">$25.600</div>
+            <div style="font-size:.82rem;color:#64748b;margin-bottom:20px;" id="done-info">Pedido #1058 · María López</div>
+            <div style="background:var(--green-light);color:var(--green-dark);border-radius:20px;padding:6px 16px;font-size:.75rem;font-weight:700;margin-bottom:24px;" id="done-rating">⭐ ¡Gracias por tu excelente servicio!</div>
+            <div style="width:100%;background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
+              <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Resumen</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:.82rem;"><span>Valor pedido</span><span id="done-totalPedido" class="fw-bold">$25.600</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:.82rem;"><span>Tu comisión (8%)</span><span id="done-comision" style="color:var(--green);font-weight:800;">$2.048</span></div>
+            </div>
+            <button class="btn-home-green" onclick="nuevoInicio()"><i class="bi bi-house me-2"></i>Volver al Inicio</button>
+          </div>
+        </div>
+
+        <!-- SCREEN: HISTORIAL -->
+        <div id="screen-historial" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <button class="menu-btn" onclick="showScreen('inicio4')"><i class="bi bi-arrow-left"></i></button>
+            <span class="app-title">Historial de Entregas</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;" id="historialList"><div style="text-align:center;padding:40px 16px;color:#94a3b8;"><i class="bi bi-clock-history" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Sin entregas completadas aún</div></div>
+          <div class="bottom-nav">
+            <a onclick="showScreen('inicio4')"><i class="bi bi-house-fill"></i>Inicio</a>
+            <a class="active"><i class="bi bi-clock-history"></i>Historial</a>
+            <a onclick="showScreen('perfil')"><i class="bi bi-person"></i>Perfil</a>
+          </div>
+        </div>
+
+        <!-- SCREEN: PERFIL -->
+        <div id="screen-perfil" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <button class="menu-btn" onclick="showScreen('inicio4')"><i class="bi bi-arrow-left"></i></button>
+            <span class="app-title">Mi Perfil</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:16px;">
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="width:72px;height:72px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;margin:0 auto 10px;">C</div>
+              <div style="font-weight:800;font-size:1rem;">Carlos Pérez</div>
+              <div style="font-size:.78rem;color:#64748b;">Repartidor · MiMini</div>
+              <div style="background:var(--green-light);color:var(--green);border-radius:20px;padding:3px 14px;font-size:.72rem;font-weight:700;display:inline-block;margin-top:6px;">⭐ 4.9 Calificación</div>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:12px;">
+              <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Mis Estadísticas</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.83rem;"><span class="text-muted">Entregas totales</span><strong id="prf-total">0</strong></div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.83rem;"><span class="text-muted">Entregas hoy</span><strong id="prf-hoy">0</strong></div>
+              <div style="display:flex;justify-content:space-between;font-size:.83rem;"><span class="text-muted">Ganancia acumulada</span><strong style="color:var(--green);" id="prf-ganancia">$0</strong></div>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:12px;">
+              <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Datos Personales</div>
+              <div style="margin-bottom:10px;"><label style="font-size:.72rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Nombre</label><input type="text" id="prf-nombre" value="Carlos Pérez" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.85rem;"/></div>
+              <div style="margin-bottom:10px;"><label style="font-size:.72rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Teléfono</label><input type="text" id="prf-tel" value="315 888 9999" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.85rem;"/></div>
+              <div style="margin-bottom:10px;"><label style="font-size:.72rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Vehículo</label>
+                <select id="prf-vehiculo" style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.85rem;">
+                  <option>Moto</option><option>Bicicleta</option><option>A pie</option>
+                </select>
+              </div>
+              <button style="width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;" onclick="savePerfil()">Guardar Cambios</button>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <a onclick="showScreen('inicio4')"><i class="bi bi-house-fill"></i>Inicio</a>
+            <a onclick="showScreen('historial')"><i class="bi bi-clock-history"></i>Historial</a>
+            <a class="active"><i class="bi bi-person"></i>Perfil</a>
+          </div>
+        </div>
+
+        <!-- SCREEN: CHAT -->
+        <div id="screen-chat" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <button class="menu-btn" onclick="showScreen('inicio4')"><i class="bi bi-arrow-left"></i></button>
+            <span class="app-title" id="chatTitle">Chat – Cliente</span>
+            <div style="width:30px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:4px;" id="chatMessages"></div>
+          <div style="padding:10px 16px;border-top:1px solid #f1f5f9;display:flex;gap:8px;">
+            <input type="text" id="chatInput" style="flex:1;border:1.5px solid #e2e8f0;border-radius:20px;padding:8px 14px;font-size:.85rem;outline:none;" placeholder="Escribe un mensaje…" onkeydown="if(event.key==='Enter')sendMsg()"/>
+            <button style="background:var(--green);border:none;width:36px;height:36px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="sendMsg()"><i class="bi bi-send-fill" style="font-size:.85rem;"></i></button>
+          </div>
+        </div>
+
+        <!-- SCREEN: INICIO (copy para phone 4) -->
+        <div id="screen-inicio4" style="display:none;flex-direction:column;flex:1;">
+          <div class="app-topbar">
+            <div style="width:30px;"></div>
+            <span class="app-title">MiMini</span>
+            <div class="avatar-sm">C</div>
+          </div>
+          <div style="padding:0 16px 12px;flex:1;overflow-y:auto;">
+            <h6 style="font-size:.78rem;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:10px;">Estado del día</h6>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+              <div style="background:#f0fdf4;border-radius:10px;padding:12px;"><div style="font-size:.65rem;font-weight:700;color:#64748b;text-transform:uppercase;">Entregas</div><div style="font-size:1.2rem;font-weight:800;color:var(--green);" id="ph4-entregas">0</div></div>
+              <div style="background:#eff6ff;border-radius:10px;padding:12px;"><div style="font-size:.65rem;font-weight:700;color:#64748b;text-transform:uppercase;">Ganancia</div><div style="font-size:1.2rem;font-weight:800;color:#2563eb;" id="ph4-ganancia">$0</div></div>
+            </div>
+            <div id="ph4-orders"></div>
+          </div>
+          <div class="bottom-nav">
+            <a class="active"><i class="bi bi-house-fill"></i>Inicio</a>
+            <a onclick="showScreen('historial')"><i class="bi bi-clock-history"></i>Historial</a>
+            <a onclick="showScreen('perfil')"><i class="bi bi-person"></i>Perfil</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<!-- MENU MODAL -->
+<div class="modal fade" id="menuModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body p-0">
+        <div style="padding:20px 16px 8px;border-bottom:1px solid #f1f5f9;">
+          <div class="d-flex align-items-center gap-3 mb-1">
+            <div style="width:44px;height:44px;background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;" id="menuAvatar">C</div>
+            <div><div style="font-weight:800;" id="menuUserName">Carlos Pérez</div><div style="font-size:.78rem;color:#64748b;">Repartidor</div></div>
+          </div>
+        </div>
+        <div style="padding:8px 0;">
+          <div style="padding:10px 20px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:10px;" onclick="showScreen('historial');document.getElementById('menuModal').querySelector('[data-bs-dismiss]').click()"><i class="bi bi-clock-history text-primary"></i>Historial</div>
+          <div style="padding:10px 20px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:10px;" onclick="showScreen('perfil');document.getElementById('menuModal').querySelector('[data-bs-dismiss]').click()"><i class="bi bi-person text-primary"></i>Mi Perfil</div>
+          <div style="padding:10px 20px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:10px;" onclick="handleLogout();document.getElementById('menuModal').querySelector('[data-bs-dismiss]').click()"><i class="bi bi-box-arrow-right text-danger"></i>Cerrar Sesión</div>
+        </div>
+        <div style="padding:8px 16px 16px;"><button class="btn btn-outline-secondary w-100" data-bs-dismiss="modal" style="border-radius:10px;font-weight:700;">Cancelar</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEMA MODAL -->
+<div class="modal fade" id="problemaModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-header border-0"><h5 class="modal-title fw-800">Reportar Problema</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label fw-bold">Tipo de Problema *</label>
+          <select class="form-select" id="prob-tipo" style="border-radius:8px;">
+            <option value="">Seleccionar…</option>
+            <option>Dirección incorrecta</option>
+            <option>Cliente no contesta</option>
+            <option>No hay nadie en la dirección</option>
+            <option>Problema con el producto</option>
+            <option>Accidente / emergencia</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label fw-bold">Descripción</label><textarea class="form-control" id="prob-desc" rows="3" placeholder="Describe el problema…" style="border-radius:8px;"></textarea></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-warning fw-bold" style="border-radius:8px;" onclick="enviarProblema()">Enviar Reporte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0" style="border-radius:16px;">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:var(--green);"></i>
+        <h6 class="fw-800 mt-3 mb-4">¿Cerrar sesión?</h6>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn flex-grow-1 text-white fw-bold" style="background:var(--green);" onclick="confirmLogout()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
