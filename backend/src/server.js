@@ -36,10 +36,6 @@ app.param('table', (req, res, next, table) => {
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
-// Rutas de auth (antes que el CRUD genérico)
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
 // Middleware para verificar conexión a BD
 const checkDB = (req, res, next) => {
     if (!getPool()) {
