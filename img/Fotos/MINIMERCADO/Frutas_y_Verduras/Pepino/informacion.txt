@@ -1,0 +1,2 @@
+Nombre del producto: Pepino
+Precio actual: $4.800

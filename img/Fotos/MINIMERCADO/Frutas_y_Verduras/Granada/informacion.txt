@@ -1,0 +1,2 @@
+Nombre del producto: Granada
+Precio actual: $39.900

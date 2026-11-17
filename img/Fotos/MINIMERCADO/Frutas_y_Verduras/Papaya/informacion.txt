@@ -1,0 +1,2 @@
+Nombre del producto: Papaya
+Precio actual: $3.180

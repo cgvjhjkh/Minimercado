@@ -1,0 +1,2 @@
+Nombre del producto: Kiwi
+Precio actual: $23.800

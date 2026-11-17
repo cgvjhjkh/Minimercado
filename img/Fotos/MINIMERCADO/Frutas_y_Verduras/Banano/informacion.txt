@@ -1,0 +1,2 @@
+Nombre del producto: Banano
+Precio actual: $2.900

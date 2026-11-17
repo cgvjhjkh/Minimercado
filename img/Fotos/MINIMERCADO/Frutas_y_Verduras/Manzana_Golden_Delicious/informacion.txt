@@ -1,0 +1,2 @@
+Nombre del producto: Manzana Golden Delicious
+Precio actual: $12.500

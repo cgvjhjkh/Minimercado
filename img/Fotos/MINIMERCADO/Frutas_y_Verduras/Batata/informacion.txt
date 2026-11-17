@@ -1,0 +1,2 @@
+Nombre del producto: Batata
+Precio actual: $7.800

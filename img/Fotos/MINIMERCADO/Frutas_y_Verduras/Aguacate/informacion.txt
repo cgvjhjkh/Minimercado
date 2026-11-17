@@ -1,0 +1,2 @@
+Nombre del producto: Aguacate
+Precio actual: $6.400

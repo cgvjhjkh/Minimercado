@@ -1,0 +1,2 @@
+Nombre del producto: Zanahoria
+Precio actual: $2.240
