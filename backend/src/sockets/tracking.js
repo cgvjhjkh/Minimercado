@@ -22,6 +22,27 @@ function registerSocketEvents(io) {
         const usuario = socket.usuario || { id: null, rol: 'anon' };
         console.log(`📡 WebSocket conectado: ${socket.id} - Rol: ${usuario.rol} - ID: ${usuario.id}`);
 
+        // Rooms solicitadas explícitamente por el cliente (SocketContext)
+        socket.on('join_room', (data = {}) => {
+            if (data.rol) socket.join(`rol:${data.rol}`);
+            if (data.id_usuario) socket.join(`usuario:${data.id_usuario}`);
+        });
+
+        // El panel del repartidor avisa que está en línea para recibir sus eventos
+        socket.on('repartidor_conectado', (data = {}) => {
+            const id = Number(data.id_repartidor);
+            if (Number.isFinite(id) && id > 0) {
+                socket.join(`repartidor_${id}`);
+                socket.emit('repartidor_registrado', { id_repartidor: id });
+            }
+        });
+
+        // Monitor de repartidor (mapa a pantalla completa)
+        socket.on('unirse_repartidor', (id) => {
+            const n = Number(id);
+            if (Number.isFinite(n) && n > 0) socket.join(`repartidor_${n}`);
+        });
+
         // Unirse a rooms según el rol
         if (usuario.id) {
             socket.join(`usuario:${usuario.id}`);
