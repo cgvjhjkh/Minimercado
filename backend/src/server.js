@@ -9,6 +9,7 @@ const { initDB, getPool } = require('./config/db');
 const registerTracking = require('./sockets/tracking');
 const { hashPassword, verifyPassword, esHashBcrypt } = require('./utils/password');
 const adminUsuariosRoutes = require('./routes/adminUsuarios');
+const notificacionesRoutes = require('./routes/notificaciones');
 
 const app = express();
 const server = http.createServer(app);
@@ -59,6 +60,17 @@ app.get('/api/health', (req, res) => {
 
 // Endpoints específicos de usuarios (deben ir ANTES del CRUD genérico /api/admin/:table)
 app.use('/api/admin/usuarios', adminUsuariosRoutes);
+
+// API del repartidor: pedidos, estados, disponibilidad, perfil,
+// estadísticas, ubicación en tiempo real y rutas históricas.
+const repartidorRoutes = require('./routes/repartidor');
+app.use('/api', repartidorRoutes(io));
+
+// API del módulo empleado (inventario, picking, daños) y de la campanita.
+// Se crea con `io` para poder avisar a los administradores en tiempo real.
+const crearRouterEmpleado = require('./routes/empleado');
+app.use('/api', crearRouterEmpleado(io));
+app.use('/api/notificaciones', notificacionesRoutes);
 
 
 app.post('/api/auth/registrar-cliente', checkDB, async (req, res) => {
@@ -150,8 +162,8 @@ app.post('/api/auth/login', checkDB, async (req, res) => {
 
         const [rows] = await getPool().execute(`
             SELECT u.id_usuario, u.nombre_completo, u.correo, u.telefono, u.doc_identidad, 
-                   u.fecha_nacimiento, u.rol, u.estado, u.contrasena_hash,
-                   c.id_cliente, r.id_repartidor, e.id_empleado
+                   u.fecha_nacimiento, u.rol, u.estado, u.contrasena_hash, u.foto_perfil,
+                   c.id_cliente, r.id_repartidor, r.disponible, r.vehiculo, e.id_empleado
             FROM usuario u
             LEFT JOIN cliente c ON u.id_usuario = c.id_usuario
             LEFT JOIN repartidor r ON u.id_usuario = r.id_usuario
@@ -201,9 +213,12 @@ app.post('/api/auth/login', checkDB, async (req, res) => {
                 doc_identidad: usuario.doc_identidad,
                 fecha_nacimiento: usuario.fecha_nacimiento,
                 rol: usuario.rol,
+                foto_perfil: usuario.foto_perfil,
                 id_cliente: usuario.id_cliente,
                 id_repartidor: usuario.id_repartidor,
-                id_empleado: usuario.id_empleado
+                id_empleado: usuario.id_empleado,
+                disponible: usuario.disponible,
+                vehiculo: usuario.vehiculo
             }
         });
 
