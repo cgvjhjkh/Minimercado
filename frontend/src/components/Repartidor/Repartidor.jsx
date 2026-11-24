@@ -43,6 +43,7 @@ export default function Repartidor() {
   const [tab, setTab] = useState('activos');
   const [seleccionadoId, setSeleccionadoId] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [confirmandoSalida, setConfirmandoSalida] = useState(false);
 
   const [toasts, setToasts] = useState([]);
   const toast = useCallback((message, type = 'success') => {
@@ -65,8 +66,15 @@ export default function Repartidor() {
     [todos, seleccionadoId]
   );
 
-  const { contenedorRef, gps, metricas, ultimaActualizacion, centrarEnMi, centrarEnDestino, verRuta } =
-    useTrackingMap({ idRepartidor, pedido: pedidoActual, onAviso: toast });
+  const {
+    contenedorRef,
+    gps,
+    metricas,
+    actualizadoHace,
+    centrarEnMi,
+    centrarEnDestino,
+    verRuta
+  } = useTrackingMap({ idRepartidor, pedido: pedidoActual, onAviso: toast });
 
   useEffect(() => {
     document.title = 'MiMini – Panel Repartidor';
@@ -112,10 +120,12 @@ export default function Repartidor() {
     }
   };
 
-  const cerrarSesion = () => {
-    if (!window.confirm('¿Cerrar sesión?')) return;
+  const cerrarSesion = () => setConfirmandoSalida(true);
+
+  const confirmarCierreSesion = () => {
     localStorage.removeItem('usuario');
     localStorage.removeItem('id_repartidor');
+    localStorage.removeItem('token');
     window.location.href = '/';
   };
 
@@ -371,7 +381,8 @@ export default function Repartidor() {
               )}
 
               <div className="rp-map-pill" style={{ marginLeft: 'auto' }}>
-                <i className="bi bi-clock" /> <span>{ultimaActualizacion}</span>
+                <i className="bi bi-clock" />{' '}
+                <span>{actualizadoHace != null ? `hace ${actualizadoHace}s` : '—'}</span>
               </div>
             </div>
 
@@ -588,6 +599,48 @@ export default function Repartidor() {
               </button>
               <button className="rp-btn-soft green" onClick={guardarPerfil}>
                 <i className="bi bi-check2" /> Guardar cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL CERRAR SESIÓN ================= */}
+      {confirmandoSalida && (
+        <div className="rp-modal-backdrop" onClick={() => setConfirmandoSalida(false)}>
+          <div className="rp-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="rp-modal-head">
+              <span>
+                <i className="bi bi-box-arrow-right me-2" style={{ color: '#ef4444' }} /> Cerrar
+                sesión
+              </span>
+              <button
+                className="rp-modal-close"
+                onClick={() => setConfirmandoSalida(false)}
+                aria-label="Cerrar"
+              >
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+
+            <div className="rp-modal-body">
+              <div className="rp-logout-msg">
+                <i className="bi bi-exclamation-triangle-fill" />
+                <div>
+                  <strong>¿Estás seguro de cerrar sesión?</strong>
+                  <span>
+                    Si tienes una entrega en curso, podrás volver a entrar cuando quieras.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rp-modal-foot">
+              <button className="rp-btn-soft" onClick={() => setConfirmandoSalida(false)}>
+                Cancelar
+              </button>
+              <button className="rp-btn-soft red" onClick={confirmarCierreSesion}>
+                <i className="bi bi-box-arrow-right" /> Cerrar sesión
               </button>
             </div>
           </div>

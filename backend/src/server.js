@@ -9,6 +9,7 @@ const { initDB, getPool } = require('./config/db');
 const registerTracking = require('./sockets/tracking');
 const { hashPassword, verifyPassword, esHashBcrypt } = require('./utils/password');
 const adminUsuariosRoutes = require('./routes/adminUsuarios');
+const notificacionesRoutes = require('./routes/notificaciones');
 
 const app = express();
 const server = http.createServer(app);
@@ -64,6 +65,12 @@ app.use('/api/admin/usuarios', adminUsuariosRoutes);
 // estadísticas, ubicación en tiempo real y rutas históricas.
 const repartidorRoutes = require('./routes/repartidor');
 app.use('/api', repartidorRoutes(io));
+
+// API del módulo empleado (inventario, picking, daños) y de la campanita.
+// Se crea con `io` para poder avisar a los administradores en tiempo real.
+const crearRouterEmpleado = require('./routes/empleado');
+app.use('/api', crearRouterEmpleado(io));
+app.use('/api/notificaciones', notificacionesRoutes);
 
 
 app.post('/api/auth/registrar-cliente', checkDB, async (req, res) => {

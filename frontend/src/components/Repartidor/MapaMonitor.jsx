@@ -68,8 +68,15 @@ function Monitor({ idRepartidor }) {
     [todos, seleccionadoId]
   );
 
-  const { contenedorRef, gps, metricas, ultimaActualizacion, centrarEnMi, centrarEnDestino, verRuta } =
-    useTrackingMap({ idRepartidor, pedido: pedidoActual, onAviso: mostrarAviso });
+  const {
+    contenedorRef,
+    gps,
+    metricas,
+    actualizadoHace,
+    centrarEnMi,
+    centrarEnDestino,
+    verRuta
+  } = useTrackingMap({ idRepartidor, pedido: pedidoActual, onAviso: mostrarAviso });
 
   useEffect(() => {
     document.title = 'MiMini – Monitor de entregas';
@@ -303,7 +310,9 @@ function Monitor({ idRepartidor }) {
           <span className={`mon-gps-dot ${gps.estado || ''}`} />
           <span>{gps.texto}</span>
         </div>
-        <div className="mon-status-item">Última actualización: {ultimaActualizacion}</div>
+        <div className="mon-status-item">
+          Última actualización: {actualizadoHace != null ? `hace ${actualizadoHace}s` : '—'}
+        </div>
         <div className="mon-status-item">
           Ruta: {metricas.distancia} · {metricas.tiempo}
         </div>

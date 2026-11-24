@@ -5,7 +5,6 @@ import {
   apiGet,
   apiSend,
   escapar,
-  fmtHora,
   haversine,
   ESTADOS_FINALES
 } from '../lib/repartidorApi';
@@ -33,6 +32,8 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
   const ultimaEnviadaRef = useRef(null);
   const ultimoEnvioRef = useRef(0);
   const ultimaRutaRef = useRef(0);
+  const ultimaActualizacionRef = useRef(null);
+  const ultimoGpsRef = useRef(0);
   const destinoCoordRef = useRef(null);
   const destinoClaveRef = useRef('');
   const pedidoRef = useRef(pedido);
@@ -42,7 +43,7 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
   const [destino, setDestino] = useState(null);
   const [gps, setGps] = useState({ texto: 'Iniciando GPS…', estado: '' });
   const [metricas, setMetricas] = useState({ distancia: '—', tiempo: '—' });
-  const [ultimaActualizacion, setUltimaActualizacion] = useState('--:--:--');
+  const [actualizadoHace, setActualizadoHace] = useState(null);
   const [listo, setListo] = useState(false);
 
   useEffect(() => {
@@ -62,6 +63,13 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
   const actualizarMetricas = useCallback((valor) => {
     setMetricas(valor);
     callbacksRef.current.onMetricas?.(valor);
+  }, []);
+
+  // Marca el instante de la última posición conocida. El texto "hace Xs" se
+  // recalcula cada segundo, así el panel sigue vivo sin recargar la página.
+  const marcarActualizacion = useCallback(() => {
+    ultimaActualizacionRef.current = Date.now();
+    setActualizadoHace(0);
   }, []);
 
   const enviarUbicacion = useCallback(
@@ -163,7 +171,9 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
       if (!mapa || !origen || !dest) return;
 
       const ahora = Date.now();
-      if (!forzar && ahora - ultimaRutaRef.current < 25000) return;
+      // La ruta se recalcula como máximo cada 9 s; el ciclo automático de 10 s
+      // siempre alcanza a refrescar distancia y tiempo de llegada.
+      if (!forzar && ahora - ultimaRutaRef.current < 9000) return;
       ultimaRutaRef.current = ahora;
 
       try {
@@ -358,11 +368,12 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
         const punto = { lat: latitude, lng: longitude };
 
         ultimaUbicacionRef.current = punto;
+        ultimoGpsRef.current = Date.now();
         setUbicacion(punto);
         callbacksRef.current.onUbicacion?.(punto);
 
         actualizarGps(`GPS ${Math.round(accuracy || 0)} m`, '');
-        setUltimaActualizacion(fmtHora());
+        marcarActualizacion();
         dibujarYo(punto);
 
         const ahora = Date.now();
@@ -398,7 +409,7 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
         gpsWatchRef.current = null;
       }
     };
-  }, [actualizarGps, calcularRuta, dibujarYo, enviarUbicacion]);
+  }, [actualizarGps, calcularRuta, dibujarYo, enviarUbicacion, marcarActualizacion]);
 
   // ---------- Última ubicación guardada ----------
   useEffect(() => {
@@ -420,6 +431,7 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
         dibujarYo(punto);
         mapaRef.current?.setView([punto.lat, punto.lng], 14);
         actualizarGps('Última ubicación guardada', 'warn');
+        marcarActualizacion();
 
         if (destinoCoordRef.current) {
           calcularRuta(punto, destinoCoordRef.current, false);
@@ -430,7 +442,7 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
     return () => {
       cancelado = true;
     };
-  }, [idRepartidor, actualizarGps, calcularRuta, dibujarYo]);
+  }, [idRepartidor, actualizarGps, calcularRuta, dibujarYo, marcarActualizacion]);
 
   // ---------- Destino del pedido seleccionado ----------
   useEffect(() => {
@@ -447,6 +459,71 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
     destinoClaveRef.current = clave;
     prepararDestino(pedido, false);
   }, [pedido, limpiarDestino, prepararDestino]);
+
+  // ---------- Reloj "hace Xs" ----------
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      const ultimo = ultimaActualizacionRef.current;
+      setActualizadoHace(
+        ultimo ? Math.max(0, Math.floor((Date.now() - ultimo) / 1000)) : null
+      );
+    }, 1000);
+    return () => clearInterval(intervalo);
+  }, []);
+
+  // ---------- Refresco automático cada 10 s ----------
+  // Mantiene viva la posición y la ruta aunque el GPS del navegador no emita
+  // (por ejemplo, el monitor siguiendo a otro repartidor). La posición se
+  // recupera del backend y la ruta se vuelve a calcular con OSRM.
+  useEffect(() => {
+    if (!idRepartidor) return undefined;
+    let cancelado = false;
+
+    const refrescar = async () => {
+      if (document.visibilityState !== 'visible') return;
+
+      const sinGpsReciente = Date.now() - (ultimoGpsRef.current || 0) > 12000;
+      if (sinGpsReciente) {
+        try {
+          const data = await apiGet(`/ubicacion/${idRepartidor}`);
+          const guardada = data.ubicacion;
+          if (!cancelado && guardada) {
+            const punto = {
+              lat: Number(guardada.latitud),
+              lng: Number(guardada.longitud)
+            };
+            if (Number.isFinite(punto.lat) && Number.isFinite(punto.lng)) {
+              const anterior = ultimaUbicacionRef.current;
+              const seMovio = !anterior || haversine(anterior, punto) > 1;
+              ultimaUbicacionRef.current = punto;
+              if (seMovio) {
+                setUbicacion(punto);
+                dibujarYo(punto);
+              }
+              marcarActualizacion();
+            }
+          }
+        } catch {
+          // Sin conexión: se reintenta en el siguiente ciclo.
+        }
+      }
+
+      if (cancelado) return;
+
+      if (destinoCoordRef.current && ultimaUbicacionRef.current) {
+        calcularRuta(ultimaUbicacionRef.current, destinoCoordRef.current, false);
+      }
+
+      const actual = pedidoRef.current;
+      if (actual) cargarRutaHistorica(actual.id);
+    };
+
+    const intervalo = setInterval(refrescar, 10000);
+    return () => {
+      cancelado = true;
+      clearInterval(intervalo);
+    };
+  }, [idRepartidor, calcularRuta, cargarRutaHistorica, dibujarYo, marcarActualizacion]);
 
   // ---------- Acciones expuestas ----------
   const centrarEnMi = useCallback(() => {
@@ -485,7 +562,7 @@ export function useTrackingMap({ idRepartidor, pedido = null, onMetricas, onGps,
     destino,
     gps,
     metricas,
-    ultimaActualizacion,
+    actualizadoHace,
     centrarEnMi,
     centrarEnDestino,
     verRuta

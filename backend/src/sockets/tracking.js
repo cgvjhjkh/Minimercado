@@ -22,10 +22,36 @@ function registerSocketEvents(io) {
         const usuario = socket.usuario || { id: null, rol: 'anon' };
         console.log(`📡 WebSocket conectado: ${socket.id} - Rol: ${usuario.rol} - ID: ${usuario.id}`);
 
-        // Rooms solicitadas explícitamente por el cliente (SocketContext)
+        // Envia a este socket el número de notificaciones sin leer del usuario.
+        function emitirContador() {
+            const id = socket.usuario?.id;
+            const pool = getPool();
+            if (!id || !pool) return;
+
+            pool.execute(
+                'SELECT COUNT(*) AS cnt FROM notificacion WHERE id_usuario = ? AND leida = 0',
+                [id]
+            ).then(([rows]) => {
+                const count = Number(rows[0]?.cnt || 0);
+                socket.emit('contador_no_leidos', { count, id_usuario: id });
+                io.to(`usuario:${id}`).emit('contador_actualizado', { count, id_usuario: id });
+            }).catch(() => {});
+        }
+
+        // Rooms solicitadas explícitamente por el cliente (campanita / SocketContext).
+        // El login actual no siempre entrega token, así que estos datos del cliente
+        // también identifican al socket para los eventos de notificaciones.
         socket.on('join_room', (data = {}) => {
-            if (data.rol) socket.join(`rol:${data.rol}`);
-            if (data.id_usuario) socket.join(`usuario:${data.id_usuario}`);
+            if (data.rol) {
+                socket.join(`rol:${data.rol}`);
+                socket.usuario = { ...(socket.usuario || {}), rol: data.rol };
+            }
+            const id = Number(data.id_usuario);
+            if (Number.isFinite(id) && id > 0) {
+                socket.join(`usuario:${id}`);
+                socket.usuario = { ...(socket.usuario || {}), id };
+                emitirContador();
+            }
         });
 
         // El panel del repartidor avisa que está en línea para recibir sus eventos
@@ -51,61 +77,29 @@ function registerSocketEvents(io) {
             socket.join(`rol:${usuario.rol}`);
         }
 
-        // Solicitar contador de no leídos al conectar
-        if (usuario.id) {
-            const pool = getPool();
-            if (pool) {
-                pool.execute(
-                    'SELECT COUNT(*) AS cnt FROM notificacion WHERE leida = 0 AND rol_destino = ?',
-                    [usuario.rol]
-                ).then(([rows]) => {
-                    socket.emit('contador_no_leidos', { count: rows[0].cnt, rol: usuario.rol });
-                }).catch(() => {});
-            }
-        }
+        // Solicitar contador de no leídos al conectar (cuando hay token)
+        if (usuario.id) emitirContador();
 
         // Marcar notificación como leída
         socket.on('notificacion_marcar_leido', async (data = {}) => {
             const { id_notificacion } = data;
-            if (!id_notificacion) return;
+            const idUsuario = socket.usuario?.id;
+            if (!id_notificacion || !idUsuario) return;
             const pool = getPool();
             if (!pool) return;
             try {
                 await pool.execute(
-                    'UPDATE notificacion SET leida = 1 WHERE id_notificacion = ?',
-                    [id_notificacion]
+                    'UPDATE notificacion SET leida = 1 WHERE id_notificacion = ? AND id_usuario = ?',
+                    [id_notificacion, idUsuario]
                 );
-                const rol = usuario.rol || 'anon';
-                pool.execute(
-                    'SELECT COUNT(*) AS cnt FROM notificacion WHERE leida = 0 AND rol_destino = ?',
-                    [rol]
-                ).then(([rows]) => {
-                    const newCount = rows[0].cnt;
-                    io.to(`rol:${rol}`).emit('contador_actualizado', { count: newCount, rol });
-                    socket.emit('contador_no_leidos', { count: newCount, rol });
-                });
+                emitirContador();
             } catch (err) {
                 console.error('Error marcando notificación:', err.message);
             }
         });
 
         // Solicitar contador (re-sincronización)
-        socket.on('solicitar_contador', async () => {
-            const usuario = socket.usuario || { id: null, rol: 'anon' };
-            if (!usuario.id) return;
-            const pool = getPool();
-            if (!pool) return;
-            try {
-                await pool.execute(
-                    'SELECT COUNT(*) AS cnt FROM notificacion WHERE leida = 0 AND rol_destino = ?',
-                    [usuario.rol]
-                ).then(([rows]) => {
-                    socket.emit('contador_no_leidos', { count: rows[0].cnt, rol: usuario.rol });
-                });
-            } catch (err) {
-                console.error('Error obteniendo contador:', err.message);
-            }
-        });
+        socket.on('solicitar_contador', () => emitirContador());
 
         // Nuevo mensaje de chat
         socket.on('mensaje_chat_enviar', async (data = {}) => {

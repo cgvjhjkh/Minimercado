@@ -10,6 +10,9 @@ Minimercado/
 │       ├── config/schema.js           migraciones de repartidores/rastreo (idempotentes)
 │       ├── routes/adminUsuarios.js    CRUD de usuarios (contraseña con bcrypt)
 │       ├── routes/repartidor.js       API del repartidor (pedidos, GPS, estadísticas)
+│       ├── routes/empleado.js         API del panel del empleado
+│       ├── routes/notificaciones.js   campanita (listado y marcado de lectura)
+│       ├── utils/notificaciones.js    notificaciones persistentes + Socket.io
 │       ├── utils/password.js          hash / verificación bcrypt + legacy
 │       ├── sockets/tracking.js        eventos de Socket.io para el rastreo
 │       └── server.js                  Express, rutas /api y arranque
@@ -17,8 +20,10 @@ Minimercado/
 │   ├── public/img/                    imágenes
 │   └── src/
 │       ├── components/                Inicio, Cliente, Empleado, Administrador, Repartidor
+│       │   ├── Notificaciones/        campanita reutilizable (montada por portal)
 │       │   └── Repartidor/            panel React + monitor a pantalla completa
 │       ├── hooks/usePageScript.js
+│       ├── hooks/usePortalNode.js     nodo destino de la campanita en HTML inyectado
 │       ├── hooks/useRepartidor.js     pedidos, estados, perfil y disponibilidad
 │       ├── hooks/useTrackingMap.js    mapa Leaflet + GPS + ruta OSRM
 │       ├── lib/auth.js                login / registro (antes script.js)
@@ -130,6 +135,43 @@ rechaza la auto-asignación desde el panel del repartidor). Los estados
 `pedido_finalizado`, `repartidor_disponibilidad`, `ubicacion_actualizada` y
 `mi_ubicacion`. El panel se une a la room `repartidor_<id>` con
 `repartidor_conectado` / `unirse_repartidor`.
+
+## Módulo de empleado y notificaciones
+
+El panel `/empleado` consume datos reales de MySQL (ya no usa datos de ejemplo):
+inventario, entradas y ajustes de stock, picking de pedidos y reportes de daño.
+
+Al **reportar un producto dañado** o **marcar un pedido como empacado**, el
+backend guarda una fila en `notificacion` para cada administrador activo y la
+emite por Socket.io a la sala `usuario_<id>`. La campanita del admin se actualiza
+sola (contador y lista), sin recargar la página. El cuerpo del trigger de
+auditoría de `inventario` se corrige automáticamente al arrancar para evitar el
+error 1442 de MySQL; el original queda respaldado en `migracion_triggers`.
+
+### API del empleado
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/empleado/inventario` | Productos, existencias y stock mínimo |
+| POST | `/api/empleado/inventario/:id_producto/entrada` | Registra una entrada de stock |
+| PATCH | `/api/empleado/inventario/:id_producto/stock` | Ajusta la existencia |
+| GET | `/api/empleado/pedidos` | Pedidos activos con sus items |
+| PATCH | `/api/empleado/pedidos/:id_pedido/items/:id_detalle` | Marca/desmarca un item del picking |
+| POST | `/api/empleado/pedidos/:id_pedido/empacar` | Empaca y notifica al administrador |
+| GET | `/api/empleado/danos?limit=` | Historial de reportes de daño |
+| POST | `/api/empleado/danos` | Reporta daño, descuenta stock y notifica |
+
+### API de la campanita
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/notificaciones/:id_usuario?limit=30` | Lista y contador de no leídas |
+| PATCH | `/api/notificaciones/:id/leida` | Marca una como leída |
+| PATCH | `/api/notificaciones/:id/no-leida` | Marca una como no leída |
+| PATCH | `/api/notificaciones/usuario/:id/leer-todas` | Marca todas como leídas |
+
+Eventos Socket.io: `join_room` (con `id_usuario`), `nueva_notificacion`,
+`solicitar_contador`, `contador_no_leidos` y `contador_actualizado`.
 
 ## Rutas del frontend
 

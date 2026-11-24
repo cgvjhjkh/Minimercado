@@ -802,6 +802,18 @@
   border-color: rgba(59, 130, 246, 0.28);
 }
 
+.repartidor-page .rp-btn-soft.red {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.repartidor-page .rp-btn-soft.red:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
 .repartidor-page .rp-btn-soft:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -912,6 +924,32 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.rp-logout-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #cfe9da;
+}
+
+.rp-logout-msg > i {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #f59e0b;
+}
+
+.rp-logout-msg strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #fff;
+}
+
+.rp-logout-msg span {
+  display: block;
+  color: #9fc4b1;
 }
 
 .rp-field {

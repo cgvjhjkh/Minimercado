@@ -27,7 +27,7 @@
   <div class="topbar">
     <span class="page-title" id="pageTitle"><i class="bi bi-boxes me-2" style="color:var(--purple);"></i>Inventario y Logística</span>
     <div class="d-flex align-items-center gap-12 ms-auto" style="gap:14px;">
-      <button class="icon-btn"><i class="bi bi-bell"></i><span class="badge-dot">2</span></button>
+      <div id="campanita-root"></div>
       <button class="icon-btn"><i class="bi bi-chat-dots"></i></button>
     </div>
     <div class="user-pill">
@@ -42,10 +42,10 @@
     <div class="tab-section active" id="section-operaciones">
       <div class="row g-4 mb-4">
         <!-- KPIs rápidos -->
-        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid var(--purple);padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Productos en Stock</div><div style="font-size:1.4rem;font-weight:800;color:var(--purple);" id="kpi-stock">--</div></div></div>
-        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid #f59e0b;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Stock Bajo</div><div style="font-size:1.4rem;font-weight:800;color:#d97706;" id="kpi-bajo">--</div></div></div>
-        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid #16a34a;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Pedidos Pendientes</div><div style="font-size:1.4rem;font-weight:800;color:#16a34a;" id="kpi-pedidos">--</div></div></div>
-        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #ede9fe;border-left:4px solid #dc2626;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Reportes Daño Hoy</div><div style="font-size:1.4rem;font-weight:800;color:#dc2626;" id="kpi-danos">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #e8eff9;border-left:4px solid var(--purple);padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Productos en Stock</div><div style="font-size:1.4rem;font-weight:800;color:var(--purple);" id="kpi-stock">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #e8eff9;border-left:4px solid #f59e0b;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Stock Bajo</div><div style="font-size:1.4rem;font-weight:800;color:#d97706;" id="kpi-bajo">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #e8eff9;border-left:4px solid #16a34a;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Pedidos Pendientes</div><div style="font-size:1.4rem;font-weight:800;color:#16a34a;" id="kpi-pedidos">--</div></div></div>
+        <div class="col-6 col-md-3"><div style="background:#fff;border-radius:12px;border:1px solid #e8eff9;border-left:4px solid #dc2626;padding:16px;"><div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;">Reportes Daño Hoy</div><div style="font-size:1.4rem;font-weight:800;color:#dc2626;" id="kpi-danos">--</div></div></div>
       </div>
       <div class="row g-4">
         <div class="col-lg-5">
@@ -58,7 +58,7 @@
                   <i class="bi bi-search"></i>
                   <input type="text" class="form-control" id="buscar-prod" placeholder="Buscar por nombre o código…" oninput="buscarProducto()"/>
                 </div>
-                <div id="buscar-results" style="display:none;border:1px solid #ede9fe;border-radius:8px;margin-top:4px;background:#fff;max-height:160px;overflow-y:auto;"></div>
+                <div id="buscar-results" style="display:none;border:1px solid #e8eff9;border-radius:8px;margin-top:4px;background:#fff;max-height:160px;overflow-y:auto;"></div>
               </div>
               <div class="row g-2">
                 <div class="col-8">
@@ -115,7 +115,7 @@
     <!-- SECCIÓN INVENTARIO -->
     <div class="tab-section" id="section-inventario">
       <div class="d-flex align-items-center justify-content-between mb-3">
-        <h5 style="font-size:.95rem;font-weight:800;color:#1e1b4b;">Estado del Inventario</h5>
+        <h5 style="font-size:.95rem;font-weight:800;color:#122c58;">Estado del Inventario</h5>
         <div class="d-flex gap-2">
           <input type="text" id="inv-search" class="form-control form-control-sm" placeholder="Buscar…" style="border-radius:8px;width:200px;" oninput="renderInventario()"/>
           <select class="form-select form-select-sm" id="inv-cat" style="width:150px;" onchange="renderInventario()">
@@ -136,7 +136,7 @@
 
     <!-- SECCIÓN PICKING (standalone) -->
     <div class="tab-section" id="section-picking">
-      <h5 style="font-size:.95rem;font-weight:800;color:#1e1b4b;margin-bottom:16px;">Preparación de Pedidos</h5>
+      <h5 style="font-size:.95rem;font-weight:800;color:#122c58;margin-bottom:16px;">Preparación de Pedidos</h5>
       <div class="row g-4">
         <div class="col-lg-4">
           <div class="panel-card">
@@ -196,7 +196,7 @@
                 <div class="col-12">
                   <div class="field-group">
                     <label>Observaciones (opcional)</label>
-                    <textarea class="form-control" id="dano-obs" rows="2" placeholder="Describe el daño encontrado…" style="border-radius:8px;border:1.5px solid #ddd6fe;font-size:.88rem;"></textarea>
+                    <textarea class="form-control" id="dano-obs" rows="2" placeholder="Describe el daño encontrado…" style="border-radius:8px;border:1.5px solid #d6e2f5;font-size:.88rem;"></textarea>
                   </div>
                 </div>
                 <div class="col-12"><button class="btn-red" onclick="reportarDano()"><i class="bi bi-exclamation-triangle"></i>Reportar Daño</button></div>
@@ -210,7 +210,7 @@
             <div class="panel-header"><h6><i class="bi bi-journal-text me-2"></i>Historial de Reportes de Daño</h6></div>
             <div class="table-responsive">
               <table class="table">
-                <thead><tr><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Producto</th><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Cant.</th><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Motivo</th><th style="background:#f5f3ff;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Fecha</th></tr></thead>
+                <thead><tr><th style="background:#f1f5fc;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Producto</th><th style="background:#f1f5fc;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Cant.</th><th style="background:#f1f5fc;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Motivo</th><th style="background:#f1f5fc;font-size:.72rem;font-weight:800;color:var(--purple);text-transform:uppercase;border:none;padding:10px 14px;">Fecha</th></tr></thead>
                 <tbody id="danosHistorial"></tbody>
               </table>
             </div>
@@ -221,7 +221,7 @@
 
     <!-- HISTORIAL -->
     <div class="tab-section" id="section-historial">
-      <h5 style="font-size:.95rem;font-weight:800;color:#1e1b4b;margin-bottom:16px;">Historial de Actividad</h5>
+      <h5 style="font-size:.95rem;font-weight:800;color:#122c58;margin-bottom:16px;">Historial de Actividad</h5>
       <div class="panel-card">
         <div class="panel-body" id="historialLista" style="max-height:500px;overflow-y:auto;"></div>
       </div>
@@ -242,7 +242,7 @@
       </div>
       <div class="modal-footer border-0">
         <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn text-white fw-bold" style="background:var(--purple);border-radius:8px;" onclick="guardarAjuste()">Guardar</button>
+        <button class="btn text-white fw-bold" style="background:#193C76;border-radius:8px;" onclick="guardarAjuste()">Guardar</button>
       </div>
     </div>
   </div>
@@ -253,11 +253,11 @@
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content border-0" style="border-radius:16px;">
       <div class="modal-body text-center py-4">
-        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:var(--purple);"></i>
+        <i class="bi bi-box-arrow-right" style="font-size:2.5rem;color:#193C76;"></i>
         <h6 class="fw-800 mt-3 mb-4">¿Cerrar sesión?</h6>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn flex-grow-1 text-white fw-bold" style="background:var(--purple);" onclick="confirmLogout()">Salir</button>
+          <button class="btn flex-grow-1 text-white fw-bold" style="background:#193C76;" onclick="confirmLogout()">Salir</button>
         </div>
       </div>
     </div>
