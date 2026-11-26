@@ -1,0 +1,140 @@
+    /* Estilos personalizados esenciales que Bootstrap no cubre directamente */
+    :root {
+      --bg: #f7f5f0;
+      --ink: #1a1a18;
+      --muted: #6b6b62;
+      --border: #e0ddd5;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      /* background-color: var(--bg); */
+      color: var(--ink);
+      background-image: url(/img/fondo.png);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      height: 100vh;
+      margin:0 ;
+
+    }
+
+    h1, .font-serif {
+      font-family: 'Fraunces', serif;
+    }
+
+    /* Ajustes finos para el buscador de la barra de navegación */
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-wrap input {
+      padding-left: 2.75rem;
+      background-color: var(--bg);
+      border-color: var(--border);
+    }
+    .search-wrap input:focus {
+      background-color: #fff;
+      border-color: var(--ink);
+      box-shadow: none;
+    }
+
+    /* Efectos hover en componentes */
+    .cat-circle {
+      width: 80px;
+      height: 80px;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      border: 1.5px solid var(--border) !important;
+    }
+    .cat-item:hover .cat-circle {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      border-color: var(--ink) !important;
+    }
+
+    .product-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1.5px solid var(--border) !important;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    }
+
+    /* Botón personalizado estilo "Ink" */
+    .btn-ink {
+      background-color: var(--ink);
+      color: #fff;
+      border: none;
+      transition: background-color 0.2s, transform 0.15s;
+    }
+    .btn-ink:hover {
+      background-color: #333330;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline-ink {
+      border: 1.5px solid var(--border);
+      color: var(--ink);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-outline-ink:hover {
+      background-color: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+
+    /* Badges flotantes sobre la imagen del producto */
+    .discount-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+    }
+
+    /* Banner Hero con patrón de fondo */
+    .hero-banner {
+      border: 1.5px solid var(--border) !important;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 28px,
+        rgba(0,0,0,0.015) 28px,
+        rgba(0,0,0,0.015) 29px
+      );
+      pointer-events: none;
+    }
+
+    /* Iconos Redes Sociales */
+    .social-icon {
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .social-icon:hover {
+      background-color: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+  

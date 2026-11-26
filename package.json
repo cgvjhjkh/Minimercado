@@ -1,23 +1,14 @@
 {
-  "name": "rastreo-api",
+  "name": "minimercado",
   "version": "1.0.0",
-  "description": "API para sistema de rastreo en tiempo real",
-  "main": "server.js",
+  "private": true,
+  "description": "Minimercado full-stack: backend Express + MySQL y frontend React + Vite",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "mysql2": "^3.22.5",
-    "socket.io": "^4.8.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+    "instalar": "npm --prefix backend install && npm --prefix frontend install",
+    "dev": "node scripts/dev.js",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start"
+  }
 }
